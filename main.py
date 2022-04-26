@@ -130,7 +130,7 @@ final_equations = []
 unknowns = []
 
 print('''Enter one of the following for support conditions
-     "fixed" or "roller" or "pinned" or "joint"''')
+     "fixed" or "roller" or "pinned" or "joint" or "none"''')
 for i in range(number_of_nodes):
     # to get the values of the displacement and forces at each of the nodes (known or unknown)
     beam_nodes[i].support_condition = input(f"What is the support condition for node {i + 1}? ")
@@ -143,7 +143,7 @@ for i in range(number_of_nodes):
         unknowns.append(beam_nodes[i].vertical_displacement)
         unknowns.append(beam_nodes[i].rotational_displacement)
 
-    elif loaded_node == "no" and beam_nodes[i].support_condition != "joint":
+    elif loaded_node == "no" and beam_nodes[i].support_condition != "joint" or "none":
         beam_nodes[i].vertical_loading = symbols(f"Qy_{i + 1}")
         unknowns.append(beam_nodes[i].vertical_loading)
         beam_nodes[i].vertical_displacement = 0
@@ -187,15 +187,15 @@ for i in range(number_of_nodes):
     elif i == (number_of_nodes - 1):
         final_equations.append(Eq(((-12 * beam_nodes[i].vertical_displacement / (
                     beam_spans[i - 1].span_length ** 3)) + (-6 * beam_nodes[i].rotational_displacement / (
-                    beam_spans[i - 1].span_length ** 2)) + (12 * beam_nodes[1 + 1].vertical_displacement / (
-                    beam_spans[i - 1].span_length ** 3)) - (6 * beam_nodes[i + 1].rotational_displacement / (
+                    beam_spans[i - 1].span_length ** 2)) + (12 * beam_nodes[1].vertical_displacement / (
+                    beam_spans[i - 1].span_length ** 3)) - (6 * beam_nodes[i].rotational_displacement / (
                     beam_spans[i - 1].span_length ** 2))) * beam_spans[i - 1].ei_value + beam_spans[i - 1].right_fem_y,
                                   beam_nodes[i].vertical_loading))
         final_equations.append(Eq(((6 * beam_nodes[i].vertical_displacement / (beam_spans[i - 1].span_length ** 2)) + (
                     2 * beam_nodes[i].rotational_displacement / beam_spans[i - 1].span_length) - (
-                                               6 * beam_nodes[1 + 1].vertical_displacement / (
+                                               6 * beam_nodes[1].vertical_displacement / (
                                                    beam_spans[i - 1].span_length ** 2)) + (
-                                               4 * beam_nodes[i + 1].rotational_displacement / beam_spans[
+                                               4 * beam_nodes[i].rotational_displacement / beam_spans[
                                            i - 1].span_length)) * beam_spans[i - 1].ei_value + beam_spans[
                                       i - 1].right_fem_z, beam_nodes[i].moment))
 
