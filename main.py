@@ -64,10 +64,13 @@ print("Key words for loading condition:"
       "\nVariably distributed load, with highest point at the center (VDL_C)")
 
 for i in range(number_of_spans):
-    beam_spans[i].span_length = int(input(f"what is the length of span {i + 1}? "))
     beam_spans[i].loading_condition = input(f"what is the loading condition of span {i + 1}? ")
     if beam_spans[i].loading_condition != "none":
         beam_spans[i].load = int(input(f"What is the magnitude of the load on span {i + 1}? "))
+    else:
+        beam_spans[i].load = 0
+
+    beam_spans[i].span_length = int(input(f"what is the length of span {i + 1}? "))
 
     # The FEM loads(y) and moments(z)
     if beam_spans[i].loading_condition == 'UDL':
@@ -162,6 +165,7 @@ for i in range(number_of_nodes):
 
     # adding the x and y-axis equations for each node to the 'final_equations' list
 
+for i in range(number_of_nodes):
     # for the first node
     if i == 0:
         final_equations.append(Eq(((12 * beam_nodes[i].vertical_displacement / (beam_spans[i].span_length ** 3)) +
