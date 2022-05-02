@@ -166,7 +166,8 @@ for i in range(number_of_nodes):
         unknowns.append(beam_nodes[i].vertical_displacement)
         unknowns.append(beam_nodes[i].rotational_displacement)
         if loaded_node == "yes":
-            beam_nodes[i].vertical_loading = int(input(f"what is the value of the vertical loading on node {i + 1}? "))
+            beam_nodes[i].vertical_loading = -1 * int(input(f"what is the value of the vertical "
+                                                            f"loading on node {i + 1}? "))
             beam_nodes[i].moment = int(input(f"Magnitude of moment acting on the node {i + 1}: "))
         elif loaded_node == "no":
             beam_nodes[i].vertical_loading = 0
