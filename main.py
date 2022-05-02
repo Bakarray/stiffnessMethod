@@ -6,8 +6,8 @@ constant_ei = input("is the EI value constant for every span? (yes) or (no): ")
 
 
 class Nodes:
-    def __int__(self, rotational_displacement=0, vertical_displacement=0, support_condition="", vertical_loading=0,
-                moment=0):
+    def __int__(self, rotational_displacement=1, vertical_displacement=1, support_condition="", vertical_loading=1,
+                moment=1):
         self.rotational_displacement = rotational_displacement
         self.vertical_displacement = vertical_displacement
         self.support_condition = support_condition
@@ -22,8 +22,8 @@ for i in range(number_of_nodes):
 
 
 class Spans:
-    def __init__(self, span_length=0, loading_condition="", ei_value="", left_fem_y="", right_fem_y="", left_fem_z="",
-                 right_fem_z="", load=0):
+    def __init__(self, span_length=1, loading_condition="", ei_value=1, left_fem_y=1, right_fem_y=1, left_fem_z=1,
+                 right_fem_z=1, load=1):
         self.ei_value = ei_value
         self.span_length = span_length
         self.loading_condition = loading_condition
@@ -43,11 +43,11 @@ for i in range(number_of_spans):
 # they include: FEM loads and moments, length, loading condition, load magnitude, and the EI_value
 if constant_ei == "yes":
     for i in range(number_of_spans):
-        beam_spans[i].ei_value = symbols("EI")
+        beam_spans[i].ei_value = int(input("what is the constant value for EI? "))
 elif constant_ei == "no":
     print("The stiffness value varies for each span")
     for i in range(number_of_spans):
-        beam_spans[i].ei_value = int(input(f"what is the EI value for span {i+1}: "))
+        beam_spans[i].ei_value = int(input(f"what is the EI value for span {i + 1}: "))
 
 # the fixed end moments are calculated based on the loading conditions
 print("Key words for loading condition:"
@@ -98,14 +98,14 @@ for i in range(number_of_spans):
     elif beam_spans[i].loading_condition == 'VDL_R':
         beam_spans[i].left_fem_z = (beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 20
         beam_spans[i].right_fem_z = -1 * (
-                    beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 30
+                beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 30
         beam_spans[i].left_fem_y = (beam_spans[i].load * beam_spans[i].span_length) / 6
         beam_spans[i].right_fem_y = (-1 * beam_spans[i].load * beam_spans[i].span_length) / 3
 
     elif beam_spans[i].loading_condition == 'VDL_L':
         beam_spans[i].left_fem_z = (beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 30
         beam_spans[i].right_fem_z = -1 * (
-                    beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 20
+                beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 20
         beam_spans[i].left_fem_y = (beam_spans[i].load * beam_spans[i].span_length) / 3
         beam_spans[i].right_fem_y = (-1 * beam_spans[i].load * beam_spans[i].span_length) / 6
 
@@ -130,102 +130,118 @@ final_equations = []
 unknowns = []
 
 print('''Enter one of the following for support conditions
-     "fixed" or "roller" or "pinned" or "joint" or "none"''')
+"fixed" or "roller" or "pinned" or "joint" or "none"''')
 for i in range(number_of_nodes):
     # to get the values of the displacement and forces at each of the nodes (known or unknown)
     beam_nodes[i].support_condition = input(f"What is the support condition for node {i + 1}? ")
     loaded_node = input(f"Is there any force or moment acting on node {i + 1}? (yes) or (no): ")
-    if loaded_node == "yes":
-        beam_nodes[i].vertical_loading = int(input(f"Magnitude of vertical force acting on node {i + 1}: "))
-        beam_nodes[i].moment = int(input(f"Magnitude of moment acting on the node {i + 1}: "))
-        beam_nodes[i].vertical_displacement = symbols(f"Dy_{i + 1}")
-        beam_nodes[i].rotational_displacement = symbols(f"Dz_{i + 1}")
-        unknowns.append(beam_nodes[i].vertical_displacement)
-        unknowns.append(beam_nodes[i].rotational_displacement)
+    node_settlement = input(f"Is there any settlement or rotation at the node {i + 1}? (yes) or (no): ")
 
-    elif loaded_node == "no" and beam_nodes[i].support_condition != "joint" or "none":
-        beam_nodes[i].vertical_loading = symbols(f"Qy_{i + 1}")
+    if beam_nodes[i].support_condition == "fixed":
+        beam_nodes[i].vertical_loading, beam_nodes[i].moment = symbols(f"qy{i + 1} qz{i + 1}")
         unknowns.append(beam_nodes[i].vertical_loading)
-        beam_nodes[i].vertical_displacement = 0
-        if beam_nodes[i].support_condition == "moment":
-            beam_nodes[i].moment = symbols(f"Qz_{i + 1}")
-            unknowns.append(beam_nodes[i].moment)
+        unknowns.append(beam_nodes[i].moment)
+        if node_settlement == "yes":
+            beam_nodes[i].vertical_displacement = int(input(f"What is the value of the settlement at node {i + 1}? "))
+            beam_nodes[i].rotational_displacement = int(input(f"What is the magnitude of rotation at node {i + 1}? "))
+        elif node_settlement == "no":
+            beam_nodes[i].vertical_displacement = 0
             beam_nodes[i].rotational_displacement = 0
-        else:
-            beam_nodes[i].moment = 0
-            beam_nodes[i].rotational_displacement = symbols(f"Dz_{i + 1}")
-            unknowns.append(beam_nodes[i].rotational_displacement)
 
-    else:
-        beam_nodes[i].vertical_loading = 0
-        beam_nodes[i].moment = 0
-        beam_nodes[i].vertical_displacement, beam_nodes[i].rotational_displacement = symbols(f"Dy_{i + 1} Dz_{i + 1}")
+    elif beam_nodes[i].support_condition == "pinned" or beam_nodes[i].support_condition == "roller":
+        beam_nodes[i].vertical_loading, beam_nodes[i].rotational_displacement = symbols(f"qy{i + 1} Dz{i + 1}")
+        unknowns.append(beam_nodes[i].vertical_loading)
+        unknowns.append(beam_nodes[i].rotational_displacement)
+        if loaded_node == "yes":
+            beam_nodes[i].moment = int(input(f"Magnitude of moment acting on the node {i + 1}: "))
+        elif loaded_node == "no":
+            beam_nodes[i].moment = 0
+        if node_settlement == "yes":
+            beam_nodes[i].vertical_displacement = int(input(f"What is the value of the settlement at node {i + 1}? "))
+        elif node_settlement == "no":
+            beam_nodes[i].vertical_displacement = 0
+
+    elif beam_nodes[i].support_condition == "none":
+        beam_nodes[i].vertical_displacement, beam_nodes[i].rotational_displacement = symbols(f"Dy{i + 1} Dz{i + 1}")
         unknowns.append(beam_nodes[i].vertical_displacement)
         unknowns.append(beam_nodes[i].rotational_displacement)
+        if loaded_node == "yes":
+            beam_nodes[i].vertical_loading = int(input(f"what is the value of the vertical loading on node {i + 1}? "))
+            beam_nodes[i].moment = int(input(f"Magnitude of moment acting on the node {i + 1}: "))
+        elif loaded_node == "no":
+            beam_nodes[i].vertical_loading = 0
+            beam_nodes[i].moment = 0
 
-    # adding the x and y-axis equations for each node to the 'final_equations' list
-
+equation1 = ""
+equation2 = ""
 for i in range(number_of_nodes):
     # for the first node
     if i == 0:
-        final_equations.append(Eq(((12 * beam_nodes[i].vertical_displacement / (beam_spans[i].span_length ** 3)) +
-                                   (6 * beam_nodes[i].rotational_displacement / (beam_spans[i].span_length ** 2)) - (
-                                               12 * beam_nodes[1 + 1].vertical_displacement / (
-                                                   beam_spans[i].span_length ** 3)) + (
-                                               6 * beam_nodes[i + 1].rotational_displacement / (
-                                                   beam_spans[i].span_length ** 2))) * beam_spans[i].ei_value +
-                                  beam_spans[i].left_fem_y, beam_nodes[i].vertical_loading))
-        final_equations.append(Eq(((6 * beam_nodes[i].vertical_displacement / (beam_spans[i].span_length ** 2)) + (
-                    4 * beam_nodes[i].rotational_displacement / beam_spans[i].span_length) - (
-                                               6 * beam_nodes[1 + 1].vertical_displacement / (
-                                                   beam_spans[i].span_length ** 2)) + (
-                                               2 * beam_nodes[i + 1].rotational_displacement / beam_spans[
-                                           i].span_length)) * beam_spans[i].ei_value + beam_spans[i].left_fem_z,
-                                  beam_nodes[i].moment))
+        equation1 = Eq(((12 * beam_nodes[i].vertical_displacement / (beam_spans[i].span_length ** 3)) +
+                        (6 * beam_nodes[i].rotational_displacement / (beam_spans[i].span_length ** 2)) - (
+                                12 * beam_nodes[i + 1].vertical_displacement / (
+                                beam_spans[i].span_length ** 3)) + (
+                                6 * beam_nodes[i + 1].rotational_displacement / (
+                                beam_spans[i].span_length ** 2))) * beam_spans[i].ei_value +
+                       beam_spans[i].left_fem_y, beam_nodes[i].vertical_loading)
+        equation2 = Eq(((6 * beam_nodes[i].vertical_displacement / (beam_spans[i].span_length ** 2)) + (
+                4 * beam_nodes[i].rotational_displacement / beam_spans[i].span_length) - (
+                                6 * beam_nodes[i + 1].vertical_displacement / (
+                                beam_spans[i].span_length ** 2)) + (
+                                2 * beam_nodes[i + 1].rotational_displacement / beam_spans[
+                            i].span_length)) * beam_spans[i].ei_value + beam_spans[i].left_fem_z,
+                       beam_nodes[i].moment)
 
     # for the last node
     elif i == (number_of_nodes - 1):
-        final_equations.append(Eq(((-12 * beam_nodes[i].vertical_displacement / (
-                    beam_spans[i - 1].span_length ** 3)) + (-6 * beam_nodes[i].rotational_displacement / (
-                    beam_spans[i - 1].span_length ** 2)) + (12 * beam_nodes[1].vertical_displacement / (
-                    beam_spans[i - 1].span_length ** 3)) - (6 * beam_nodes[i].rotational_displacement / (
-                    beam_spans[i - 1].span_length ** 2))) * beam_spans[i - 1].ei_value + beam_spans[i - 1].right_fem_y,
-                                  beam_nodes[i].vertical_loading))
-        final_equations.append(Eq(((6 * beam_nodes[i].vertical_displacement / (beam_spans[i - 1].span_length ** 2)) + (
-                    2 * beam_nodes[i].rotational_displacement / beam_spans[i - 1].span_length) - (
-                                               6 * beam_nodes[1].vertical_displacement / (
-                                                   beam_spans[i - 1].span_length ** 2)) + (
-                                               4 * beam_nodes[i].rotational_displacement / beam_spans[
-                                           i - 1].span_length)) * beam_spans[i - 1].ei_value + beam_spans[
-                                      i - 1].right_fem_z, beam_nodes[i].moment))
+        equation1 = Eq(((-12 * beam_nodes[i-1].vertical_displacement / (
+                beam_spans[i - 1].span_length ** 3)) + (-6 * beam_nodes[i-1].rotational_displacement / (
+                beam_spans[i - 1].span_length ** 2)) + (12 * beam_nodes[i].vertical_displacement / (
+                beam_spans[i - 1].span_length ** 3)) - (6 * beam_nodes[i].rotational_displacement / (
+                beam_spans[i - 1].span_length ** 2))) * beam_spans[i - 1].ei_value + beam_spans[i - 1].right_fem_y,
+                       beam_nodes[i].vertical_loading)
+        equation2 = Eq(((6 * beam_nodes[i-1].vertical_displacement / (beam_spans[i - 1].span_length ** 2)) + (
+                2 * beam_nodes[i-1].rotational_displacement / beam_spans[i - 1].span_length) - (
+                                6 * beam_nodes[i].vertical_displacement / (
+                                beam_spans[i - 1].span_length ** 2)) + (
+                                4 * beam_nodes[i].rotational_displacement / beam_spans[
+                            i - 1].span_length)) * beam_spans[i - 1].ei_value + beam_spans[
+                           i - 1].right_fem_z, beam_nodes[i].moment)
 
     # for intermediate nodes
     else:
-        final_equations.append(Eq((((-12 * beam_nodes[i - 1].vertical_displacement / (
-                    beam_spans[i - 1].span_length ** 3)) - (6 * beam_nodes[i - 1].rotational_displacement / (
-                    beam_spans[i - 1].span_length ** 2)) + (12 * beam_nodes[i].vertical_displacement / (
-                    beam_spans[i - 1].span_length ** 3)) - (6 * beam_nodes[i].rotational_displacement / (
-                    beam_spans[i - 1].span_length ** 2))) * beam_spans[i - 1].ei_value) + (((-12 * beam_nodes[
+        equation1 = Eq((((-12 * beam_nodes[i - 1].vertical_displacement / (
+                beam_spans[i - 1].span_length ** 3)) - (6 * beam_nodes[i - 1].rotational_displacement / (
+                beam_spans[i - 1].span_length ** 2)) + (12 * beam_nodes[i].vertical_displacement / (
+                beam_spans[i - 1].span_length ** 3)) - (6 * beam_nodes[i].rotational_displacement / (
+                beam_spans[i - 1].span_length ** 2))) * beam_spans[i - 1].ei_value) + (((12 * beam_nodes[
             i].vertical_displacement / (beam_spans[i].span_length ** 3)) + (6 * beam_nodes[
             i].rotational_displacement / (beam_spans[i].span_length ** 2)) - (12 * beam_nodes[
             i + 1].vertical_displacement / (beam_spans[i].span_length ** 3)) + (6 * beam_nodes[
-            i].vertical_displacement / (beam_spans[i].span_length ** 2))) * beam_spans[i].ei_value + beam_spans[
-                                                                                               i - 1].right_fem_y +
-                                                                                           beam_spans[i].left_fem_y),
-                                  beam_nodes[i].vertical_loading))
-        final_equations.append(Eq((((6 * beam_nodes[i - 1].vertical_displacement / (
-                    beam_spans[i - 1].span_length ** 3)) + (2 * beam_nodes[i - 1].rotational_displacement / beam_spans[
-            i - 1].span_length) - (6 * beam_nodes[i].vertical_displacement / (beam_spans[i - 1].span_length ** 3)) + (
-                                                4 * beam_nodes[i].rotational_displacement / (
-                                                    beam_spans[i - 1].span_length ** 2))) * beam_spans[
-                                       i - 1].ei_value) + (((6 * beam_nodes[i].vertical_displacement / (
-                    beam_spans[i].span_length ** 2)) + (4 * beam_nodes[i].rotational_displacement / beam_spans[
+            i+1].rotational_displacement / (beam_spans[i].span_length ** 2))) * beam_spans[i].ei_value) + (beam_spans[
+                                                                                                    i - 1].right_fem_y +
+                                                                                                       beam_spans[
+                                                                                                        i].left_fem_y),
+                       beam_nodes[i].vertical_loading)
+        equation2 = Eq((((6 * beam_nodes[i - 1].vertical_displacement / (
+                beam_spans[i - 1].span_length ** 2)) + (2 * beam_nodes[i - 1].rotational_displacement / beam_spans[
+            i - 1].span_length) - (6 * beam_nodes[i].vertical_displacement / (beam_spans[i - 1].span_length ** 2)) + (
+                                 4 * beam_nodes[i].rotational_displacement / (
+                             beam_spans[i - 1].span_length))) * beam_spans[
+                            i - 1].ei_value) + (((6 * beam_nodes[i].vertical_displacement / (
+                beam_spans[i].span_length ** 2)) + (4 * beam_nodes[i].rotational_displacement / beam_spans[
             i].span_length) - (6 * beam_nodes[i + 1].vertical_displacement / (beam_spans[i].span_length ** 2)) + (
-                                                                        2 * beam_nodes[i].vertical_displacement / (
-                                                                            beam_spans[i].span_length ** 2))) *
-                                                           beam_spans[i].ei_value + beam_spans[i - 1].right_fem_z +
-                                                           beam_spans[i].left_fem_z), beam_nodes[i].moment))
+                                                         2 * beam_nodes[i + 1].rotational_displacement / (
+                                                     beam_spans[i].span_length))) *
+                                                beam_spans[i].ei_value) + (beam_spans[i - 1].right_fem_z +
+                                                                           beam_spans[i].left_fem_z),
+                       beam_nodes[i].moment)
+
+    final_equations.append(equation1)
+    final_equations.append(equation2)
+
+print(unknowns)
+print(final_equations)
 
 solution = solve(tuple(final_equations), tuple(unknowns))
-
 print(solution)
