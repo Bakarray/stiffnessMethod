@@ -6,8 +6,8 @@ constant_ei = input("is the EI value constant for every span? (yes) or (no): ")
 
 
 class Nodes:
-    def __int__(self, rotational_displacement=1, vertical_displacement=1, support_condition="", vertical_loading=1,
-                moment=1):
+    def __init__(self, rotational_displacement=1, vertical_displacement=1, support_condition="", vertical_loading=1,
+                 moment=1):
         self.rotational_displacement = rotational_displacement
         self.vertical_displacement = vertical_displacement
         self.support_condition = support_condition
@@ -121,8 +121,8 @@ for i in range(number_of_spans):
         beam_spans[i].left_fem_y = 0
         beam_spans[i].right_fem_y = 0
 
-# every node on the beam has an equation, and there are three equations for the first, last and intermediate nodes
-# we also need to know the support condition for the nodes for later calculations
+# every node on the beam has two equations (Qy and Qz), and there are three sets of equations; for the first, last and
+# intermediate nodes. We also need to know the support condition for the nodes for later calculations
 
 # The equations for each node will be put into the 'final_equations' list and be solved simultaneously
 # The equations will be solved for the members in the 'unknowns' list
