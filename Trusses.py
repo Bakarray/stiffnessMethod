@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from sympy import symbols
+from sympy import symbols, Eq, solve
 
 # Creating a list of nodes and members of the truss
 truss_nodes = []
@@ -9,12 +9,11 @@ truss_members = []
 
 # Classes to hold the properties of every node and span of the truss structure
 class Node:
-    def __init__(self, x_coord=1, y_coord=1, support="", force=1, x_dof=1, y_dof=1, x_displacement="",
+    def __init__(self, x_coord=1, y_coord=1, support="", x_dof=1, y_dof=1, x_displacement="",
                  y_displacement="", x_force="", y_force="", settlement=1):
         self.x_coord = x_coord
         self.y_coord = y_coord
         self.support = support
-        self.force = force
         self.x_dof = x_dof
         self.y_dof = y_dof
         self.x_displacement = x_displacement
@@ -62,7 +61,7 @@ constant_ei_value = input("Are the EI values of all members constant? (yes) or (
 # Setting the default values of nodal displacements and forces as unknowns
 for i in range(node_count):
     truss_nodes[i].x_displacement, truss_nodes[i].y_displacement, truss_nodes[i].x_force, truss_nodes[i].y_force = \
-        symbols("Dx[i], Dy[i], Qx[i], Qy[i]")
+        symbols(f"Dx[{i}], Dy[{i}], Qx[{i}], Qy[{i}]")
 
 # Getting settlement and nodal force data
 for i in range(node_count):
@@ -72,9 +71,9 @@ for i in range(node_count):
     if truss_nodes[i].support == "fixed":
         if node_settlement == "yes":
             truss_nodes[i].x_displacement = int(input(f"What is the value of settlement in the x direction at node"
-                                                      f" {i}? "))
+                                                      f" {i + 1}? "))
             truss_nodes[i].y_displacement = int(input(f"What is the value of settlement in the y direction at node"
-                                                      f" {i}? "))
+                                                      f" {i + 1}? "))
         elif node_settlement == "no":
             truss_nodes[i].x_displacement = 0
             truss_nodes[i].y_displacement = 0
@@ -82,9 +81,9 @@ for i in range(node_count):
     elif truss_nodes[i].support == "pinned":
         if node_settlement == "yes":
             truss_nodes[i].x_displacement = int(input(f"What is the value of settlement in the x direction at node"
-                                                      f" {i}? "))
+                                                      f" {i + 1}? "))
             truss_nodes[i].y_displacement = int(input(f"What is the value of settlement in the y direction at node"
-                                                      f" {i}? "))
+                                                      f" {i + 1}? "))
         elif node_settlement == "no":
             truss_nodes[i].x_displacement = 0
             truss_nodes[i].y_displacement = 0
@@ -92,21 +91,21 @@ for i in range(node_count):
     elif truss_nodes[i].support == "roller":
         if node_settlement == "yes":
             truss_nodes[i].y_displacement = int(input(f"What is the value of settlement in the y direction at node"
-                                                      f" {i}? "))
+                                                      f" {i + 1}? "))
         elif node_settlement == "no":
             truss_nodes[i].y_displacement = 0
         if loaded_node == "yes":
             truss_nodes[i].x_force = int(input(f"What is the value of the external force in the x direction at node"
-                                               f" {i}? "))
+                                               f" {i + 1}? "))
         elif loaded_node == "no":
             truss_nodes[i].x_force = 0
 
     elif truss_nodes[i].support == "none":
         if loaded_node == "yes":
             truss_nodes[i].x_force = int(input(f"What is the value of the external force in the x direction at node"
-                                               f" {i}? "))
+                                               f" {i + 1}? "))
             truss_nodes[i].y_force = int(input(f"What is the value of the external force in the y direction at node"
-                                               f" {i}? "))
+                                               f" {i + 1}? "))
         elif loaded_node == "no":
             truss_nodes[i].x_force = 0
             truss_nodes[i].y_force = 0
@@ -226,7 +225,30 @@ struct_stiffness_matrix = np.zeros((2 * node_count, 2 * node_count))
 for i in range(member_count):
     struct_stiffness_matrix = np.add(struct_stiffness_matrix, truss_members[i].stiffness_matrix)
 
+
 # Creating the one-column displacement matrix
+displacement_matrix = []
+T_displacement_matrix = []  # Transposed displacement matrix
+for i in range(node_count):
+    displacement_matrix.append(truss_nodes[i].x_displacement)
+    displacement_matrix.append(truss_nodes[i].y_displacement)
+for element in displacement_matrix:
+    T_displacement_matrix.append([element])
+
+stiffness_x_displacement_matrix = np.matmul(struct_stiffness_matrix, T_displacement_matrix)
+print(stiffness_x_displacement_matrix)
+
+final_equations = []
+
+for i in range(node_count):
+    equation1 = Eq(truss_nodes[i].x_force, stiffness_x_displacement_matrix[(2*(i+1))-2])
+    equation2 = Eq(truss_nodes[i].y_force, stiffness_x_displacement_matrix[(2*(i+1))-1])
+
+    final_equations.append(equation1)
+    final_equations.append(equation2)
+
+# get the unknowns and solve
+
 # ##################################################################################>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 
