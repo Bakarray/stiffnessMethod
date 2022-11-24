@@ -241,8 +241,5 @@ for i in range(number_of_nodes):
     final_equations.append(equation1)
     final_equations.append(equation2)
 
-print(unknowns)
-print(final_equations)
-
 solution = solve(tuple(final_equations), tuple(unknowns))
 print(solution)
