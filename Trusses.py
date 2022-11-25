@@ -44,8 +44,8 @@ member_count = int(input("How many members are there in your Truss? "))
 for i in range(node_count):
     truss_nodes.append("")
     truss_nodes[i] = Node()
-    truss_nodes[i].x_restraint = input(f"is the node {i+1} restrained in the x direction? (yes) or (no): ")
-    truss_nodes[i].y_restraint = input(f"is the node {i+1} restrained in the y direction? (yes) or (no): ")
+    truss_nodes[i].x_restraint = input(f"is the node {i + 1} restrained in the x direction? (yes) or (no): ")
+    truss_nodes[i].y_restraint = input(f"is the node {i + 1} restrained in the y direction? (yes) or (no): ")
 
 for i in range(member_count):
     truss_members.append("")
@@ -61,7 +61,7 @@ constant_ei_value = input("Are the EI values of all members constant? (yes) or (
 # Setting the default values of nodal displacements and forces as unknowns
 for i in range(node_count):
     truss_nodes[i].x_displacement, truss_nodes[i].y_displacement, truss_nodes[i].x_force, truss_nodes[i].y_force = \
-        symbols(f"Dx[{i+1}] Dy[{i+1}] Qx[{i+1}] Qy[{i+1}]")
+        symbols(f"Dx[{i + 1}] Dy[{i + 1}] Qx[{i + 1}] Qy[{i + 1}]")
 
 unknowns = []  # To contain the unknown forces we have to solve for at the end
 
@@ -239,7 +239,6 @@ struct_stiffness_matrix = np.zeros((2 * node_count, 2 * node_count))
 for i in range(member_count):
     struct_stiffness_matrix = np.add(struct_stiffness_matrix, truss_members[i].stiffness_matrix)
 
-
 # Creating the one-column displacement matrix
 displacement_matrix = []
 T_displacement_matrix = []  # Transposed displacement matrix
@@ -254,8 +253,8 @@ stiffness_x_displacement_matrix = np.matmul(struct_stiffness_matrix, T_displacem
 final_equations = []
 
 for i in range(node_count):
-    equation1 = Eq(stiffness_x_displacement_matrix[(2*(i+1))-2, 0], truss_nodes[i].x_force)
-    equation2 = Eq(stiffness_x_displacement_matrix[(2*(i+1))-1, 0], truss_nodes[i].y_force)
+    equation1 = Eq(stiffness_x_displacement_matrix[(2 * (i + 1)) - 2, 0], truss_nodes[i].x_force)
+    equation2 = Eq(stiffness_x_displacement_matrix[(2 * (i + 1)) - 1, 0], truss_nodes[i].y_force)
 
     final_equations.append(equation1)
     final_equations.append(equation2)
@@ -263,5 +262,17 @@ for i in range(node_count):
 # gives the unknown forces and displacement in the structure
 solution = solve(tuple(final_equations), tuple(unknowns))
 
-print(solution)
-print(unknowns)
+
+def checkSymbol(node):
+    return node if type(node) == int else solution.get(node, 0)
+
+
+for i in range(node_count):
+    node = truss_nodes[i]
+    i += 1
+    x_displacement = checkSymbol(node.x_displacement)
+    y_displacement = checkSymbol(node.y_displacement)
+    x_force = checkSymbol(node.x_force)
+    y_force = checkSymbol(node.y_force)
+    print([f"truss_node{[i]}.x_displacement: {x_displacement}, truss_node{[i]}.y_displacement: {y_displacement}, \
+truss_node{[i]}.x_force: {x_force}, truss_node{[i]}.y_force: {y_force}"])
