@@ -76,7 +76,7 @@ for i in range(number_of_spans):
         beam_spans[i].left_fem_y = (beam_spans[i].load * beam_spans[i].span_length) / 2
         beam_spans[i].right_fem_y = -1 * beam_spans[i].left_fem_y
 
-    elif beam_spans[i].loading_condition == 'UDL/2_R':
+    elif beam_spans[i].loading_condition == 'UDL/2_L':
         beam_spans[i].load = int(input(f"What is the magnitude of the unit load on half of the span {i + 1}? "))
         beam_spans[i].left_fem_z = (11 * beam_spans[i].load * beam_spans[i].span_length * beam_spans[
             i].span_length) / 192
@@ -85,7 +85,7 @@ for i in range(number_of_spans):
         beam_spans[i].left_fem_y = (beam_spans[i].load * beam_spans[i].span_length) / 8
         beam_spans[i].right_fem_y = (-3 * beam_spans[i].load * beam_spans[i].span_length) / 8
 
-    elif beam_spans[i].loading_condition == 'UDL/2_L':
+    elif beam_spans[i].loading_condition == 'UDL/2_R':
         beam_spans[i].load = int(input(f"What is the magnitude of the unit load on half of the span {i + 1}? "))
         beam_spans[i].left_fem_z = (5 * beam_spans[i].load * beam_spans[i].span_length * beam_spans[
             i].span_length) / 192
@@ -126,9 +126,9 @@ for i in range(number_of_spans):
 
     elif beam_spans[i].loading_condition == 'P_X':
         beam_spans[i].load = int(input(f"What is the magnitude of the point load on span {i + 1}? "))
-        a = int(input(f"what is the distance of the point load to the left end of the span {i+1}? "))
+        a = int(input(f"what is the distance of the point load to the left end of the span {i + 1}? "))
         b = beam_spans[i].span_length - a
-        beam_spans[i].left_fem_z = (beam_spans[i].load * b * b * a) / beam_spans[i].span_length**2
+        beam_spans[i].left_fem_z = (beam_spans[i].load * b * b * a) / beam_spans[i].span_length ** 2
         beam_spans[i].right_fem_z = -1 * beam_spans[i].left_fem_z
         beam_spans[i].left_fem_y = beam_spans[i].load * (1 - (a / beam_spans[i].span_length))
         beam_spans[i].right_fem_y = -1 * (beam_spans[i].load * a) / beam_spans[i].span_length
@@ -228,14 +228,14 @@ for i in range(number_of_nodes):
 
     # for the last node
     elif i == (number_of_nodes - 1):
-        equation1 = Eq(((-12 * beam_nodes[i-1].vertical_displacement / (
-                beam_spans[i - 1].span_length ** 3)) + (-6 * beam_nodes[i-1].rotational_displacement / (
+        equation1 = Eq(((-12 * beam_nodes[i - 1].vertical_displacement / (
+                beam_spans[i - 1].span_length ** 3)) + (-6 * beam_nodes[i - 1].rotational_displacement / (
                 beam_spans[i - 1].span_length ** 2)) + (12 * beam_nodes[i].vertical_displacement / (
                 beam_spans[i - 1].span_length ** 3)) - (6 * beam_nodes[i].rotational_displacement / (
                 beam_spans[i - 1].span_length ** 2))) * beam_spans[i - 1].ei_value + beam_spans[i - 1].right_fem_y,
                        beam_nodes[i].vertical_loading)
-        equation2 = Eq(((6 * beam_nodes[i-1].vertical_displacement / (beam_spans[i - 1].span_length ** 2)) + (
-                2 * beam_nodes[i-1].rotational_displacement / beam_spans[i - 1].span_length) - (
+        equation2 = Eq(((6 * beam_nodes[i - 1].vertical_displacement / (beam_spans[i - 1].span_length ** 2)) + (
+                2 * beam_nodes[i - 1].rotational_displacement / beam_spans[i - 1].span_length) - (
                                 6 * beam_nodes[i].vertical_displacement / (
                                 beam_spans[i - 1].span_length ** 2)) + (
                                 4 * beam_nodes[i].rotational_displacement / beam_spans[
@@ -252,10 +252,10 @@ for i in range(number_of_nodes):
             i].vertical_displacement / (beam_spans[i].span_length ** 3)) + (6 * beam_nodes[
             i].rotational_displacement / (beam_spans[i].span_length ** 2)) - (12 * beam_nodes[
             i + 1].vertical_displacement / (beam_spans[i].span_length ** 3)) + (6 * beam_nodes[
-            i+1].rotational_displacement / (beam_spans[i].span_length ** 2))) * beam_spans[i].ei_value) + (beam_spans[
-                                                                                                    i - 1].right_fem_y +
-                                                                                                       beam_spans[
-                                                                                                        i].left_fem_y),
+            i + 1].rotational_displacement / (beam_spans[i].span_length ** 2))) * beam_spans[i].ei_value) + (beam_spans[
+                                                                                                                 i - 1].right_fem_y +
+                                                                                                             beam_spans[
+                                                                                                                 i].left_fem_y),
                        beam_nodes[i].vertical_loading)
         equation2 = Eq((((6 * beam_nodes[i - 1].vertical_displacement / (
                 beam_spans[i - 1].span_length ** 2)) + (2 * beam_nodes[i - 1].rotational_displacement / beam_spans[
