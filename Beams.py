@@ -6,8 +6,8 @@ constant_ei = input("is the EI value constant for every span? (yes) or (no): ")
 
 
 class Nodes:
-    def __init__(self, rotational_displacement=1, vertical_displacement=1, support_condition="", vertical_loading=1,
-                 moment=1):
+    def __int__(self, rotational_displacement=1, vertical_displacement=1, support_condition="", vertical_loading=1,
+                moment=1):
         self.rotational_displacement = rotational_displacement
         self.vertical_displacement = vertical_displacement
         self.support_condition = support_condition
@@ -43,7 +43,7 @@ for i in range(number_of_spans):
 # they include: FEM loads and moments, length, loading condition, load magnitude, and the EI_value
 if constant_ei == "yes":
     for i in range(number_of_spans):
-        beam_spans[i].ei_value = 1
+        beam_spans[i].ei_value = int(input("what is the constant value for EI? "))
 elif constant_ei == "no":
     print("The stiffness value varies for each span")
     for i in range(number_of_spans):
@@ -53,7 +53,7 @@ elif constant_ei == "no":
 print("Key words for loading condition:"
       "\nNo loading on span (none)"
       "\nPoint load at center (P_C)"
-      "\nPoint load at distance 'a' from left end to the point load (P_X)"
+      "\nPoint load at distance 'a' from left end and 'b' from the right end (P_X)"
       "\nTwo equal point loads, spaced at 1/3 of the total length from each other (P_C_2)"
       "\nThree equal point loads, spaced at 1/4 of the total length from each other (P_C_3)"
       "\nUniformly distributed load over the whole length (UDL)"
@@ -65,19 +65,21 @@ print("Key words for loading condition:"
 
 for i in range(number_of_spans):
     beam_spans[i].loading_condition = input(f"what is the loading condition of span {i + 1}? ")
+    if beam_spans[i].loading_condition != "none":
+        beam_spans[i].load = int(input(f"What is the magnitude of the load on span {i + 1}? "))
+    else:
+        beam_spans[i].load = 0
 
     beam_spans[i].span_length = int(input(f"what is the length of span {i + 1}? "))
 
     # The FEM loads(y) and moments(z)
     if beam_spans[i].loading_condition == 'UDL':
-        beam_spans[i].load = int(input(f"What is the magnitude of the unit load on span {i + 1}? "))
         beam_spans[i].left_fem_z = (beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 12
         beam_spans[i].right_fem_z = -1 * beam_spans[i].left_fem_z
         beam_spans[i].left_fem_y = (beam_spans[i].load * beam_spans[i].span_length) / 2
         beam_spans[i].right_fem_y = -1 * beam_spans[i].left_fem_y
 
-    elif beam_spans[i].loading_condition == 'UDL/2_L':
-        beam_spans[i].load = int(input(f"What is the magnitude of the unit load on half of the span {i + 1}? "))
+    elif beam_spans[i].loading_condition == 'UDL/2_R':
         beam_spans[i].left_fem_z = (11 * beam_spans[i].load * beam_spans[i].span_length * beam_spans[
             i].span_length) / 192
         beam_spans[i].right_fem_z = -1 * (5 * beam_spans[i].load * beam_spans[i].span_length *
@@ -85,8 +87,7 @@ for i in range(number_of_spans):
         beam_spans[i].left_fem_y = (beam_spans[i].load * beam_spans[i].span_length) / 8
         beam_spans[i].right_fem_y = (-3 * beam_spans[i].load * beam_spans[i].span_length) / 8
 
-    elif beam_spans[i].loading_condition == 'UDL/2_R':
-        beam_spans[i].load = int(input(f"What is the magnitude of the unit load on half of the span {i + 1}? "))
+    elif beam_spans[i].loading_condition == 'UDL/2_L':
         beam_spans[i].left_fem_z = (5 * beam_spans[i].load * beam_spans[i].span_length * beam_spans[
             i].span_length) / 192
         beam_spans[i].right_fem_z = -1 * (11 * beam_spans[i].load * beam_spans[i].span_length *
@@ -95,7 +96,6 @@ for i in range(number_of_spans):
         beam_spans[i].right_fem_y = (-1 * beam_spans[i].load * beam_spans[i].span_length) / 8
 
     elif beam_spans[i].loading_condition == 'VDL_R':
-        beam_spans[i].load = int(input(f"What is the largest magnitude of the unit variable load on span {i + 1}? "))
         beam_spans[i].left_fem_z = (beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 20
         beam_spans[i].right_fem_z = -1 * (
                 beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 30
@@ -103,7 +103,6 @@ for i in range(number_of_spans):
         beam_spans[i].right_fem_y = (-1 * beam_spans[i].load * beam_spans[i].span_length) / 3
 
     elif beam_spans[i].loading_condition == 'VDL_L':
-        beam_spans[i].load = int(input(f"What is the largest magnitude of the unit variable load on span {i + 1}? "))
         beam_spans[i].left_fem_z = (beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 30
         beam_spans[i].right_fem_z = -1 * (
                 beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 20
@@ -111,51 +110,19 @@ for i in range(number_of_spans):
         beam_spans[i].right_fem_y = (-1 * beam_spans[i].load * beam_spans[i].span_length) / 6
 
     elif beam_spans[i].loading_condition == 'VDL_C':
-        beam_spans[i].load = int(input(f"What is the largest magnitude of the unit variable load on span {i + 1}? "))
         beam_spans[i].left_fem_z = (5 * beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 96
         beam_spans[i].right_fem_z = -1 * beam_spans[i].left_fem_z
         beam_spans[i].left_fem_y = (beam_spans[i].load * beam_spans[i].span_length) / 4
         beam_spans[i].right_fem_y = -1 * beam_spans[i].left_fem_y
 
-    elif beam_spans[i].loading_condition == 'P_C':
-        beam_spans[i].load = int(input(f"What is the magnitude of the point load on span {i + 1}? "))
-        beam_spans[i].left_fem_z = (beam_spans[i].load * beam_spans[i].span_length) / 8
-        beam_spans[i].right_fem_z = -1 * beam_spans[i].left_fem_z
-        beam_spans[i].left_fem_y = beam_spans[i].load / 2
-        beam_spans[i].right_fem_y = -1 * beam_spans[i].left_fem_y
-
-    elif beam_spans[i].loading_condition == 'P_X':
-        beam_spans[i].load = int(input(f"What is the magnitude of the point load on span {i + 1}? "))
-        a = int(input(f"what is the distance of the point load to the left end of the span {i + 1}? "))
-        b = beam_spans[i].span_length - a
-        beam_spans[i].left_fem_z = (beam_spans[i].load * b * b * a) / beam_spans[i].span_length ** 2
-        beam_spans[i].right_fem_z = -1 * beam_spans[i].left_fem_z
-        beam_spans[i].left_fem_y = beam_spans[i].load * (1 - (a / beam_spans[i].span_length))
-        beam_spans[i].right_fem_y = -1 * (beam_spans[i].load * a) / beam_spans[i].span_length
-
-    elif beam_spans[i].loading_condition == 'P_C_2':
-        beam_spans[i].load = int(input(f"What is the magnitude of one of the point load on span {i + 1}? "))
-        beam_spans[i].left_fem_z = (2 * beam_spans[i].load * beam_spans[i].span_length) / 9
-        beam_spans[i].right_fem_z = -1 * beam_spans[i].left_fem_z
-        beam_spans[i].left_fem_y = beam_spans[i].load
-        beam_spans[i].right_fem_y = -1 * beam_spans[i].left_fem_y
-
-    elif beam_spans[i].loading_condition == 'P_C_3':
-        beam_spans[i].load = int(input(f"What is the magnitude of one of the point load on span {i + 1}? "))
-        beam_spans[i].left_fem_z = (15 * beam_spans[i].load * beam_spans[i].span_length) / 48
-        beam_spans[i].right_fem_z = -1 * beam_spans[i].left_fem_z
-        beam_spans[i].left_fem_y = (3 * beam_spans[i].load) / 2
-        beam_spans[i].right_fem_y = -1 * beam_spans[i].left_fem_y
-
     elif beam_spans[i].loading_condition == "none":
-        beam_spans[i].load = 0
         beam_spans[i].left_fem_z = 0
         beam_spans[i].right_fem_z = 0
         beam_spans[i].left_fem_y = 0
         beam_spans[i].right_fem_y = 0
 
-# every node on the beam has two equations (Qy and Qz), and there are three sets of equations; for the first, last and
-# intermediate nodes. We also need to know the support condition for the nodes for later calculations
+# every node on the beam has an equation, and there are three equations for the first, last and intermediate nodes
+# we also need to know the support condition for the nodes for later calculations
 
 # The equations for each node will be put into the 'final_equations' list and be solved simultaneously
 # The equations will be solved for the members in the 'unknowns' list
@@ -199,7 +166,7 @@ for i in range(number_of_nodes):
         unknowns.append(beam_nodes[i].vertical_displacement)
         unknowns.append(beam_nodes[i].rotational_displacement)
         if loaded_node == "yes":
-            beam_nodes[i].vertical_loading = -1 * int(input(f"what is the value of the vertical "
+            beam_nodes[i].vertical_loading = int(input(f"what is the value of the vertical "
                                                             f"loading on node {i + 1}? "))
             beam_nodes[i].moment = int(input(f"Magnitude of moment acting on the node {i + 1}: "))
         elif loaded_node == "no":
@@ -273,6 +240,9 @@ for i in range(number_of_nodes):
 
     final_equations.append(equation1)
     final_equations.append(equation2)
+
+print(unknowns)
+print(final_equations)
 
 solution = solve(tuple(final_equations), tuple(unknowns))
 print(solution)
