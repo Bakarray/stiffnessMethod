@@ -43,7 +43,7 @@ for i in range(number_of_spans):
 # they include: FEM loads and moments, length, loading condition, load magnitude, and the EI_value
 if constant_ei == "yes":
     for i in range(number_of_spans):
-        beam_spans[i].ei_value = int(input("what is the constant value for EI? "))
+        beam_spans[i].ei_value = 1
 elif constant_ei == "no":
     print("The stiffness value varies for each span")
     for i in range(number_of_spans):
@@ -65,10 +65,6 @@ print("Key words for loading condition:"
 
 for i in range(number_of_spans):
     beam_spans[i].loading_condition = input(f"what is the loading condition of span {i + 1}? ")
-    if beam_spans[i].loading_condition != "none":
-        beam_spans[i].load = int(input(f"What is the magnitude of the load on span {i + 1}? "))
-    else:
-        beam_spans[i].load = 0
 
     beam_spans[i].span_length = int(input(f"what is the length of span {i + 1}? "))
 
@@ -138,18 +134,21 @@ for i in range(number_of_spans):
         beam_spans[i].right_fem_y = -1 * (beam_spans[i].load * a) / beam_spans[i].span_length
 
     elif beam_spans[i].loading_condition == 'P_C_2':
-        beam_spans[i].left_fem_z =
-        beam_spans[i].right_fem_z
-        beam_spans[i].left_fem_y
-        beam_spans[i].right_fem_y
+        beam_spans[i].load = int(input(f"What is the magnitude of one of the point load on span {i + 1}? "))
+        beam_spans[i].left_fem_z = (2 * beam_spans[i].load * beam_spans[i].span_length) / 9
+        beam_spans[i].right_fem_z = -1 * beam_spans[i].left_fem_z
+        beam_spans[i].left_fem_y = beam_spans[i].load
+        beam_spans[i].right_fem_y = -1 * beam_spans[i].left_fem_y
 
     elif beam_spans[i].loading_condition == 'P_C_3':
-        beam_spans[i].left_fem_z
-        beam_spans[i].right_fem_z
-        beam_spans[i].left_fem_y
-        beam_spans[i].right_fem_y
+        beam_spans[i].load = int(input(f"What is the magnitude of one of the point load on span {i + 1}? "))
+        beam_spans[i].left_fem_z = (15 * beam_spans[i].load * beam_spans[i].span_length) / 48
+        beam_spans[i].right_fem_z = -1 * beam_spans[i].left_fem_z
+        beam_spans[i].left_fem_y = (3 * beam_spans[i].load) / 2
+        beam_spans[i].right_fem_y = -1 * beam_spans[i].left_fem_y
 
     elif beam_spans[i].loading_condition == "none":
+        beam_spans[i].load = 0
         beam_spans[i].left_fem_z = 0
         beam_spans[i].right_fem_z = 0
         beam_spans[i].left_fem_y = 0
