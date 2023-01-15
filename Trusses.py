@@ -263,16 +263,16 @@ for i in range(node_count):
 solution = solve(tuple(final_equations), tuple(unknowns))
 
 
-def checkSymbol(node):
+def check_symbol(node):
     return node if type(node) == int else solution.get(node, 0)
 
 
 for i in range(node_count):
     node = truss_nodes[i]
     i += 1
-    x_displacement = checkSymbol(node.x_displacement)
-    y_displacement = checkSymbol(node.y_displacement)
-    x_force = checkSymbol(node.x_force)
-    y_force = checkSymbol(node.y_force)
+    x_displacement = check_symbol(node.x_displacement)
+    y_displacement = check_symbol(node.y_displacement)
+    x_force = check_symbol(node.x_force)
+    y_force = check_symbol(node.y_force)
     print([f"truss_node{[i]}.x_displacement: {x_displacement}, truss_node{[i]}.y_displacement: {y_displacement}, \
 truss_node{[i]}.x_force: {x_force}, truss_node{[i]}.y_force: {y_force}"])

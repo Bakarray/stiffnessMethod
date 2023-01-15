@@ -11,7 +11,7 @@ class Nodes:
         self.rotational_displacement = rotational_displacement
         self.vertical_displacement = vertical_displacement
         self.support_condition = support_condition
-        self.vertical_loading = vertical_loading
+        self.vertical_reaction = vertical_loading
         self.moment = moment
 
 
@@ -42,8 +42,10 @@ for i in range(number_of_spans):
 # First, we need to get the span parameters needed for the final equations
 # they include: FEM loads and moments, length, loading condition, load magnitude, and the EI_value
 if constant_ei == "yes":
+    constant_ei_value = int(input("what is the constant value for EI? "))
     for i in range(number_of_spans):
-        beam_spans[i].ei_value = int(input("what is the constant value for EI? "))
+        beam_spans[i].ei_value = constant_ei_value
+
 elif constant_ei == "no":
     print("The stiffness value varies for each span")
     for i in range(number_of_spans):
@@ -65,21 +67,48 @@ print("Key words for loading condition:"
 
 for i in range(number_of_spans):
     beam_spans[i].loading_condition = input(f"what is the loading condition of span {i + 1}? ")
-    if beam_spans[i].loading_condition != "none":
-        beam_spans[i].load = int(input(f"What is the magnitude of the load on span {i + 1}? "))
-    else:
-        beam_spans[i].load = 0
-
     beam_spans[i].span_length = int(input(f"what is the length of span {i + 1}? "))
 
-    # The FEM loads(y) and moments(z)
-    if beam_spans[i].loading_condition == 'UDL':
+    # The FEM reactions(y) and moments(z)
+    if beam_spans[i].loading_condition == 'P_C':
+        beam_spans[i].load = int(input(f"What is the magnitude of the unit load load on span {i + 1}? "))
+        beam_spans[i].left_fem_z = (beam_spans[i].load * beam_spans[i].span_length) / 8
+        beam_spans[i].right_fem_z = -1 * beam_spans[i].left_fem_z
+        beam_spans[i].left_fem_y = beam_spans[i].load / 2
+        beam_spans[i].right_fem_y = -1 * beam_spans[i].left_fem_y
+
+    elif beam_spans[i].loading_condition == 'P_X':
+        beam_spans[i].load = int(input(f"What is the magnitude of the load on span {i + 1}? "))
+        a = int(input(f"What is the distance of the point load from the left end of the span? "))
+        b = beam_spans[i].span_length - a
+        beam_spans[i].left_fem_z = (beam_spans[i].load * b * b * a) / beam_spans[i].span_length ** 2
+        beam_spans[i].right_fem_z = (beam_spans[i].load * b * a * a) / beam_spans[i].span_length ** 2
+        beam_spans[i].left_fem_y = beam_spans[i].load * (1 - (a / beam_spans[i].span_length))
+        beam_spans[i].right_fem_y = -1 * ((beam_spans[i].load * a) / beam_spans[i].span_length)
+
+    elif beam_spans[i].loading_condition == 'P_C_2':
+        beam_spans[i].load = int(input(f"What is the magnitude of one of the equal loads on span {i + 1}? "))
+        beam_spans[i].left_fem_z = (2 * beam_spans[i].load * beam_spans[i].span_length) / 9
+        beam_spans[i].right_fem_z = -1 * beam_spans[i].left_fem_z
+        beam_spans[i].left_fem_y = beam_spans[i].load
+        beam_spans[i].right_fem_y = -1 * beam_spans[i].left_fem_y
+
+    elif beam_spans[i].loading_condition == 'P_C_3':
+        beam_spans[i].load = int(input(f"What is the magnitude of one of the equal loads on span {i + 1}? "))
+        beam_spans[i].left_fem_z = (15 * beam_spans[i].load * beam_spans[i].span_length) / 48
+        beam_spans[i].right_fem_z = -1 * beam_spans[i].left_fem_z
+        beam_spans[i].left_fem_y = (3 * beam_spans[i].load / 2)
+        beam_spans[i].right_fem_y = -1 * beam_spans[i].left_fem_y
+
+    elif beam_spans[i].loading_condition == 'UDL':
+        beam_spans[i].load = int(input(f"What is the magnitude of a unit load on span {i + 1}? "))
         beam_spans[i].left_fem_z = (beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 12
         beam_spans[i].right_fem_z = -1 * beam_spans[i].left_fem_z
         beam_spans[i].left_fem_y = (beam_spans[i].load * beam_spans[i].span_length) / 2
         beam_spans[i].right_fem_y = -1 * beam_spans[i].left_fem_y
 
     elif beam_spans[i].loading_condition == 'UDL/2_R':
+        beam_spans[i].load = int(input(f"What is the magnitude of a unit load on half of the span {i + 1}? "))
         beam_spans[i].left_fem_z = (11 * beam_spans[i].load * beam_spans[i].span_length * beam_spans[
             i].span_length) / 192
         beam_spans[i].right_fem_z = -1 * (5 * beam_spans[i].load * beam_spans[i].span_length *
@@ -88,6 +117,7 @@ for i in range(number_of_spans):
         beam_spans[i].right_fem_y = (-3 * beam_spans[i].load * beam_spans[i].span_length) / 8
 
     elif beam_spans[i].loading_condition == 'UDL/2_L':
+        beam_spans[i].load = int(input(f"What is the magnitude of a unit load on half of the span {i + 1}? "))
         beam_spans[i].left_fem_z = (5 * beam_spans[i].load * beam_spans[i].span_length * beam_spans[
             i].span_length) / 192
         beam_spans[i].right_fem_z = -1 * (11 * beam_spans[i].load * beam_spans[i].span_length *
@@ -96,6 +126,7 @@ for i in range(number_of_spans):
         beam_spans[i].right_fem_y = (-1 * beam_spans[i].load * beam_spans[i].span_length) / 8
 
     elif beam_spans[i].loading_condition == 'VDL_R':
+        beam_spans[i].load = int(input(f"What is the magnitude of the highest unit load on span {i + 1}? "))
         beam_spans[i].left_fem_z = (beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 20
         beam_spans[i].right_fem_z = -1 * (
                 beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 30
@@ -103,6 +134,7 @@ for i in range(number_of_spans):
         beam_spans[i].right_fem_y = (-1 * beam_spans[i].load * beam_spans[i].span_length) / 3
 
     elif beam_spans[i].loading_condition == 'VDL_L':
+        beam_spans[i].load = int(input(f"What is the magnitude of the highest unit load on span {i + 1}? "))
         beam_spans[i].left_fem_z = (beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 30
         beam_spans[i].right_fem_z = -1 * (
                 beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 20
@@ -110,12 +142,14 @@ for i in range(number_of_spans):
         beam_spans[i].right_fem_y = (-1 * beam_spans[i].load * beam_spans[i].span_length) / 6
 
     elif beam_spans[i].loading_condition == 'VDL_C':
+        beam_spans[i].load = int(input(f"What is the magnitude of the highest unit load on span {i + 1}? "))
         beam_spans[i].left_fem_z = (5 * beam_spans[i].load * beam_spans[i].span_length * beam_spans[i].span_length) / 96
         beam_spans[i].right_fem_z = -1 * beam_spans[i].left_fem_z
         beam_spans[i].left_fem_y = (beam_spans[i].load * beam_spans[i].span_length) / 4
         beam_spans[i].right_fem_y = -1 * beam_spans[i].left_fem_y
 
     elif beam_spans[i].loading_condition == "none":
+        beam_spans[i].load = 0
         beam_spans[i].left_fem_z = 0
         beam_spans[i].right_fem_z = 0
         beam_spans[i].left_fem_y = 0
@@ -129,17 +163,16 @@ for i in range(number_of_spans):
 final_equations = []
 unknowns = []
 
-print('''Enter one of the following for support conditions
-"fixed" or "roller" or "pinned" or "joint" or "none"''')
+print('Enter one of the following for support conditions \n \t"fixed" or "roller" or "pinned" or "joint" or "none"')
 for i in range(number_of_nodes):
     # to get the values of the displacement and forces at each of the nodes (known or unknown)
     beam_nodes[i].support_condition = input(f"What is the support condition for node {i + 1}? ")
     loaded_node = input(f"Is there any force or moment acting on node {i + 1}? (yes) or (no): ")
-    node_settlement = input(f"Is there any settlement or rotation at the node {i + 1}? (yes) or (no): ")
+    node_settlement = input(f"Is there any settlement at the node {i + 1}? (yes) or (no): ")
 
     if beam_nodes[i].support_condition == "fixed":
-        beam_nodes[i].vertical_loading, beam_nodes[i].moment = symbols(f"qy{i + 1} qz{i + 1}")
-        unknowns.append(beam_nodes[i].vertical_loading)
+        beam_nodes[i].vertical_reaction, beam_nodes[i].moment = symbols(f"qy{i + 1} qz{i + 1}")
+        unknowns.append(beam_nodes[i].vertical_reaction)
         unknowns.append(beam_nodes[i].moment)
         if node_settlement == "yes":
             beam_nodes[i].vertical_displacement = int(input(f"What is the value of the settlement at node {i + 1}? "))
@@ -149,8 +182,8 @@ for i in range(number_of_nodes):
             beam_nodes[i].rotational_displacement = 0
 
     elif beam_nodes[i].support_condition == "pinned" or beam_nodes[i].support_condition == "roller":
-        beam_nodes[i].vertical_loading, beam_nodes[i].rotational_displacement = symbols(f"qy{i + 1} Dz{i + 1}")
-        unknowns.append(beam_nodes[i].vertical_loading)
+        beam_nodes[i].vertical_reaction, beam_nodes[i].rotational_displacement = symbols(f"qy{i + 1} Dz{i + 1}")
+        unknowns.append(beam_nodes[i].vertical_reaction)
         unknowns.append(beam_nodes[i].rotational_displacement)
         if loaded_node == "yes":
             beam_nodes[i].moment = int(input(f"Magnitude of moment acting on the node {i + 1}: "))
@@ -166,11 +199,11 @@ for i in range(number_of_nodes):
         unknowns.append(beam_nodes[i].vertical_displacement)
         unknowns.append(beam_nodes[i].rotational_displacement)
         if loaded_node == "yes":
-            beam_nodes[i].vertical_loading = int(input(f"what is the value of the vertical "
-                                                            f"loading on node {i + 1}? "))
+            beam_nodes[i].vertical_reaction = int(input(f"what is the value of the vertical "
+                                                        f"loading on node {i + 1}? "))
             beam_nodes[i].moment = int(input(f"Magnitude of moment acting on the node {i + 1}: "))
         elif loaded_node == "no":
-            beam_nodes[i].vertical_loading = 0
+            beam_nodes[i].vertical_reaction = 0
             beam_nodes[i].moment = 0
 
 equation1 = ""
@@ -184,7 +217,7 @@ for i in range(number_of_nodes):
                                 beam_spans[i].span_length ** 3)) + (
                                 6 * beam_nodes[i + 1].rotational_displacement / (
                                 beam_spans[i].span_length ** 2))) * beam_spans[i].ei_value +
-                       beam_spans[i].left_fem_y, beam_nodes[i].vertical_loading)
+                       beam_spans[i].left_fem_y, beam_nodes[i].vertical_reaction)
         equation2 = Eq(((6 * beam_nodes[i].vertical_displacement / (beam_spans[i].span_length ** 2)) + (
                 4 * beam_nodes[i].rotational_displacement / beam_spans[i].span_length) - (
                                 6 * beam_nodes[i + 1].vertical_displacement / (
@@ -200,7 +233,7 @@ for i in range(number_of_nodes):
                 beam_spans[i - 1].span_length ** 2)) + (12 * beam_nodes[i].vertical_displacement / (
                 beam_spans[i - 1].span_length ** 3)) - (6 * beam_nodes[i].rotational_displacement / (
                 beam_spans[i - 1].span_length ** 2))) * beam_spans[i - 1].ei_value + beam_spans[i - 1].right_fem_y,
-                       beam_nodes[i].vertical_loading)
+                       beam_nodes[i].vertical_reaction)
         equation2 = Eq(((6 * beam_nodes[i - 1].vertical_displacement / (beam_spans[i - 1].span_length ** 2)) + (
                 2 * beam_nodes[i - 1].rotational_displacement / beam_spans[i - 1].span_length) - (
                                 6 * beam_nodes[i].vertical_displacement / (
@@ -223,7 +256,7 @@ for i in range(number_of_nodes):
                                                                                                                  i - 1].right_fem_y +
                                                                                                              beam_spans[
                                                                                                                  i].left_fem_y),
-                       beam_nodes[i].vertical_loading)
+                       beam_nodes[i].vertical_reaction)
         equation2 = Eq((((6 * beam_nodes[i - 1].vertical_displacement / (
                 beam_spans[i - 1].span_length ** 2)) + (2 * beam_nodes[i - 1].rotational_displacement / beam_spans[
             i - 1].span_length) - (6 * beam_nodes[i].vertical_displacement / (beam_spans[i - 1].span_length ** 2)) + (
