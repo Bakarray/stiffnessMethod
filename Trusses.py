@@ -53,7 +53,7 @@ for i in range(member_count):
 
 # Getting the area and EI values of every member
 constant_area = input("Are the cross-sectional areas of all members constant? (yes) or (no) ")
-constant_ei_value = input("Are the EI values of all members constant? (yes) or (no) ")
+constant_ei_value = input("Are the E values of all members constant? (yes) or (no) ")
 
 # Displacement in a particular direction is zero, when the support prevents movement in that direction
 # Otherwise, displacement in a particular direction is unknown
@@ -124,14 +124,19 @@ for i in range(node_count):
             truss_nodes[i].x_force = 0
             truss_nodes[i].y_force = 0
 
-# Including every node and member into lists, and making them an instance of their respective classes
 if constant_area == "no":
     for i in range(member_count):
         truss_members[i].area = float(input(f"What is the cross-sectional area of member {i + 1} on the truss? "))
+elif constant_area == "yes":
+    for i in range(member_count):
+        truss_members[i].area = 1
 
 if constant_ei_value == "no":
     for i in range(member_count):
-        truss_members[i].area = float(input(f"what is the EI value of member {i + 1} on the truss? "))
+        truss_members[i].ei_value = float(input(f"what is the EI value of member {i + 1} on the truss? "))
+elif constant_ei_value == "no":
+    for i in range(member_count):
+        truss_members[i].ei_value = 1
 
 # Getting the coordinates of every node from user
 for i in range(node_count):
@@ -263,8 +268,8 @@ for i in range(node_count):
 solution = solve(tuple(final_equations), tuple(unknowns))
 
 
-def check_symbol(node):
-    return node if type(node) == int else solution.get(node, 0)
+def check_symbol(factor):
+    return factor if type(factor) == int else solution.get(factor, 0)
 
 
 for i in range(node_count):
@@ -274,5 +279,5 @@ for i in range(node_count):
     y_displacement = check_symbol(node.y_displacement)
     x_force = check_symbol(node.x_force)
     y_force = check_symbol(node.y_force)
-    print([f"truss_node{[i]}.x_displacement: {x_displacement}, truss_node{[i]}.y_displacement: {y_displacement}, \
-truss_node{[i]}.x_force: {x_force}, truss_node{[i]}.y_force: {y_force}"])
+    print([f"Horizontal displacement at node {[i]}: {x_displacement}, Vertical displacement at node {[i]}:\
+{y_displacement}, Horizontal reaction at node {[i]}: {x_force}, Vertical reaction at node {[i]}: {y_force}"])
