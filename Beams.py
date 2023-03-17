@@ -38,7 +38,7 @@ node = []
 span = []
 
 # Getting beam information from the user
-beam_length = int(input("What is the total length of the beam (m): "))
+beam_length = float(input("What is the total length of the beam (m): "))
 node_num = int(input("How many nodes are on the beam (i.e points of; supports, joints, change in cross-section): "))
 span_num = node_num - 1
 
@@ -62,6 +62,7 @@ if load_num:
     print("Load type (keyword): point load (p), uniformly distributed loading (d), or triangular loading (t) ")
 
 # gets and stores information about the span loadings  in the span class
+# Sign convention: Loadings acting upward is positive, loadings acting downward is negative
 for i in range(load_num):
     beam_loads.append({'type': input(f"Load {i + 1} type: ")})  # Asks the user for the type of each load
     if beam_loads[i]['type'] == 'p':
@@ -109,6 +110,7 @@ for i in range(load_num):
                 span[j].loads.append(beam_loads[i])
 
 # Gets and stores information about the point moments on the beam
+# Sign convention: clockwise moments = positive; anticlockwise = negative
 beam_moments = []  # A list to hold all the point moments on the beam
 moment_num = int(input("How many point moments are on the beam: "))
 if moment_num:
@@ -118,9 +120,9 @@ if moment_num:
         magnitude, position = map(float, input(f"point moment {i + 1} (magnitude (kn.m), position (m): ").split(","))
         beam_moments.append({'position': position, 'magnitude': magnitude})
 
-        for j in range(node_num):  # if point moment is acting on a node
-            if beam_moments[i]['position'] == node[i].node_position:
-                node[i].node_moment = beam_moments[i]['magnitude']
+        for n in node:  # if point moment is acting on a node
+            if beam_moments[i]['position'] == n.node_position:
+                n.node_moment = beam_moments[i]['magnitude']
                 break
 
         for j in range(node_num):  # if point moment is acting on a span
@@ -128,6 +130,7 @@ if moment_num:
                 span[j - 1].moments.append(beam_moments[i])
                 break
 
+print(f"all moments: {beam_moments}")
 # Calculating the fixed end moments and reactions on each span due to applied loads
 for i in range(span_num):
     for loading in span[i].loads:
@@ -140,7 +143,7 @@ for i in range(span_num):
             span[i].right_fem_z += -1 * (p * a * a * b) / (l * l)
             span[i].left_fem_z += (p * b * b * a) / (l * l)
 
-            span[i].imposed_moments += p * a
+            span[i].imposed_moments += p * b
             span[i].total_loads += p
 
             span[i].left_fem_y = span[i].imposed_moments / span[i].length
@@ -166,6 +169,17 @@ for i in range(span_num):
             span[i].left_fem_y = span[i].imposed_moments / span[i].length
             span[i].right_fem_y = span[i].total_loads - span[i].left_fem_y
 
+    span[i].left_fem_y = round(span[i].left_fem_y, 2)
+    span[i].right_fem_y = round(span[i].right_fem_y, 2)
+    span[i].left_fem_z = round(span[i].left_fem_z, 2)
+    span[i].right_fem_z = round(span[i].right_fem_z, 2)
+"""
+    print(f"left fem_y span[{i}]: {span[i].left_fem_y}")
+    print(f"left fem_z span[{i}]: {span[i].left_fem_z}")
+    print(f"right fem_y span[{i}]: {span[i].right_fem_y}")
+    print(f"right fem_z span[{i}]: {span[i].right_fem_z}")
+"""
+
 # Calculating the fixed end moments and reactions on each span due to applied moments
 for i in range(span_num):
     for moment in span[i].moments:
@@ -190,6 +204,9 @@ for i in range(node_num):
     else:
         node[i].fem_rxn_y = span[i - 1].right_fem_y + span[i].left_fem_y
         node[i].fem_rxn_z = span[i - 1].right_fem_z + span[i].left_fem_z
+
+    """print(f"moment at node [{i}] = {node[i].fem_rxn_z}")
+    print(f"reaction at node [{i}] = {node[i].fem_rxn_y}")"""
 
 # The equations for each node will be put into the 'final_equations' list and be solved simultaneously
 # The equations will be solved for the members in the 'unknowns' list
@@ -226,26 +243,26 @@ for i in range(node_num):
                         (6 * node[i].disp_z / (span[i].length ** 2)) -
                         (12 * node[i + 1].disp_y / (span[i].length ** 3)) +
                         (6 * node[i + 1].disp_z / (span[i].length ** 2))) * span[i].ei_value
-                       + node[i].fem_rxn_y, node[i].supp_rxn_y)
+                       + node[i].fem_rxn_y, (node[i].supp_rxn_y - node[i].node_load))
         equation2 = Eq(((6 * node[i].disp_y / (span[i].length ** 2)) +
                         (4 * node[i].disp_z / span[i].length) -
                         (6 * node[i + 1].disp_y / (span[i].length ** 2)) +
                         (2 * node[i + 1].disp_z / span[i].length)) * span[i].ei_value
-                       + node[i].fem_rxn_z, node[i].supp_rxn_z)
+                       + node[i].fem_rxn_z, (node[i].supp_rxn_z - node[i].node_moment))
 
     # for the last node
     elif i == (node_num - 1):
-        equation1 = Eq(((-12 * node[i - 1].disp_y / (span[i - 1].length ** 3)) +
+        equation1 = Eq((((-12 * node[i - 1].disp_y) / (span[i - 1].length ** 3)) +
                         (-6 * node[i - 1].disp_z / (span[i - 1].length ** 2)) +
                         (12 * node[i].disp_y / (span[i - 1].length ** 3)) -
                         (6 * node[i].disp_z / (span[i - 1].length ** 2))) * span[i - 1].ei_value
-                       + node[i].fem_rxn_y, node[i].supp_rxn_y)
+                       + node[i].fem_rxn_y, (node[i].supp_rxn_y - node[i].node_load))
 
         equation2 = Eq(((6 * node[i - 1].disp_y / (span[i - 1].length ** 2)) +
                         (2 * node[i - 1].disp_z / span[i - 1].length) -
                         (6 * node[i].disp_y / (span[i - 1].length ** 2)) +
-                        (4 * node[i].disp_y / span[i - 1].length)) * span[i - 1].ei_value
-                       + node[i].fem_rxn_z, node[i].supp_rxn_z)
+                        (4 * node[i].disp_z / span[i - 1].length)) * span[i - 1].ei_value
+                       + node[i].fem_rxn_z, (node[i].supp_rxn_z - node[i].node_moment))
 
     # for intermediate nodes
     else:
@@ -257,7 +274,7 @@ for i in range(node_num):
                            (6 * node[i].disp_z / (span[i].length ** 2)) -
                            (12 * node[i + 1].disp_y / (span[i].length ** 3)) +
                            (6 * node[i + 1].disp_z / (span[i].length ** 2))) * span[i].ei_value)
-                       + node[i].fem_rxn_y, node[i].supp_rxn_y)
+                       + node[i].fem_rxn_y, (node[i].supp_rxn_y - node[i].node_load))
 
         equation2 = Eq((((6 * node[i - 1].disp_y / (span[i - 1].length ** 2)) +
                          (2 * node[i - 1].disp_z / span[i - 1].length) -
@@ -267,10 +284,12 @@ for i in range(node_num):
                            (4 * node[i].disp_z / span[i].length) -
                            (6 * node[i + 1].disp_y / (span[i].length ** 2)) +
                            (2 * node[i + 1].disp_z / span[i].length)) * span[i].ei_value)
-                       + node[i].fem_rxn_z, node[i].supp_rxn_z)
+                       + node[i].fem_rxn_z, (node[i].supp_rxn_z - node[i].node_moment))
 
     final_equations.append(equation1)
     final_equations.append(equation2)
+    print(f"node {i}: equation 1 = {equation1}")
+    print(f"node {i}: equation 2 = {equation2}")
 
 solution = solve(tuple(final_equations), tuple(unknowns))
 
@@ -279,14 +298,43 @@ def check_symbol(factor):
     return factor if type(factor) == int else solution.get(factor, 0)
 
 
+all_loads = []
 for i in range(node_num):
     y_displacement = check_symbol(node[i].disp_y)
     z_displacement = check_symbol(node[i].disp_z)
     y_reaction = check_symbol(node[i].supp_rxn_y)
     z_reaction = check_symbol(node[i].supp_rxn_z)
 
-    i += 1
-    print(f"vertical displacement at node {i + 1} = {round(y_displacement, 3)}")
-    print(f"rotational displacement at node {i + 1} = {round(z_displacement, 3)}")
+    all_loads += [{'type': 'rxn', 'position': node[i].node_position,
+                   'magnitude': round((y_reaction + node[i].node_load), 3)}]
+
+    """print(f"vertical displacement at node {i + 1} = {round(y_displacement, 3)}")
+    print(f"rotational displacement at node {i + 1} = {round(z_displacement, 3)}")"""
     print(f"vertical reaction at node {i + 1} = {round(y_reaction, 3)}")
-    print(f"rotational reaction at node {i + 1} = {round(z_reaction, 3)}")
+    # print(f"rotational reaction at node {i + 1} = {round(z_reaction, 3)}")
+
+for i in range(span_num):
+    all_loads += span[i].loads
+
+# Getting the coordinates for the shear force diagram
+sf_x = 0
+sf_array = [sf_x]
+x = 0
+
+while x <= beam_length:
+    for load in all_loads:
+        if (load['type'] == 'p') and (load['position'] == round(x, 2)):
+            sf_x -= load['magnitude']
+
+        if load['type'] == 'rxn' and (load['position'] == round(x, 2)):
+            sf_x += load['magnitude']
+
+        if load['type'] == 'd' and (load['start'] < round(x, 2) <= load['end']):
+            sf_x -= (load['unit_load'] * 0.1)
+
+    sf_x = round(sf_x, 2)
+    sf_array.append(sf_x)
+
+    x += 0.1
+
+
