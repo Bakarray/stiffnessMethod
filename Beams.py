@@ -318,23 +318,33 @@ for i in range(span_num):
 
 # Getting the coordinates for the shear force diagram
 sf_x = 0
-sf_array = [sf_x]
+sf_array = []
 x = 0
+x_array = []
 
 while x <= beam_length:
     for load in all_loads:
         if (load['type'] == 'p') and (load['position'] == round(x, 2)):
+            sf_array.append(sf_x)
+            x_array.append(x)
             sf_x -= load['magnitude']
 
         if load['type'] == 'rxn' and (load['position'] == round(x, 2)):
+            sf_array.append(sf_x)
+            x_array.append(x)
             sf_x += load['magnitude']
 
         if load['type'] == 'd' and (load['start'] < round(x, 2) <= load['end']):
             sf_x -= (load['unit_load'] * 0.1)
 
     sf_x = round(sf_x, 2)
+    x = round(x, 2)
     sf_array.append(sf_x)
+    x_array.append(x)
 
     x += 0.1
 
-
+# print(f"shear force: {sf_array}")
+# print(f"distance: {x_array}")
+for i in range(len(sf_array)):
+    print(f"position {x_array[i]} = {sf_array[i]}")
