@@ -234,6 +234,28 @@ for i in range(node_num):
         unknowns.append(node[i].disp_y)
         unknowns.append(node[i].disp_z)
 
+# add moment caused by overhanging span to supp_rxn_z
+for i in range(len(node)):
+    if i == 0 and node[i].supp_type == 'n':
+        node[i + 1].supp_rxn_z -= node[i].node_load * span[i].length
+
+        for load in span[i].loads:
+            if load['type'] == 'p':
+                node[i + 1].supp_rxn_z -= load['magnitude'] * (node[i + 1].node_position - load['position'])
+            elif load['type'] == 'd':
+                udl_width = load['end'] - load['start']
+                node[i + 1].supp_rxn_z -= load['unit_load'] * udl_width * udl_width / 2
+
+    elif (i == len(node) - 1) and node[i].supp_type == 'n':
+        node[i - 1].supp_rxn_z += node[i].node_load * span[i - 1].length
+
+        for load in span[i - 1].loads:
+            if load['type'] == 'p':
+                node[i - 1].supp_rxn_z += load['magnitude'] * (node[i + 1].node_position - load['position'])
+            elif load['type'] == 'd':
+                udl_width = load['end'] - load['start']
+                node[i - 1].supp_rxn_z += load['unit_load'] * udl_width * udl_width / 2
+
 equation1 = ""
 equation2 = ""
 for i in range(node_num):

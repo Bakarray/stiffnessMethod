@@ -10,6 +10,7 @@ sns.set_style('whitegrid')
 
 # Create the plot
 plt.plot(x, y, label='Shear Force', color='green')
+
 plt.axhline(y=0, color='black', linewidth=1)
 
 # Set the axis labels
