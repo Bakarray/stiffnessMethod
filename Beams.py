@@ -169,6 +169,11 @@ for i in range(span_num):
             span[i].left_fem_y = span[i].imposed_moments / span[i].length
             span[i].right_fem_y = span[i].total_loads - span[i].left_fem_y
 
+        print(f"left vertical rxn on span [{i+1}] = {span[i].left_fem_y}")
+        print(f"right vertical rxn on span [{i+1}] = {span[i].right_fem_y}")
+        print(f"left rotational rxn on span [{i+1}] = {span[i].left_fem_z}")
+        print(f"right rotational rxn on span [{i+1}] = {span[i].right_fem_z}")
+
     span[i].left_fem_y = round(span[i].left_fem_y, 2)
     span[i].right_fem_y = round(span[i].right_fem_y, 2)
     span[i].left_fem_z = round(span[i].left_fem_z, 2)
@@ -321,6 +326,7 @@ def check_symbol(factor):
 
 
 all_loads = []
+all_moments = []
 for i in range(node_num):
     y_displacement = check_symbol(node[i].disp_y)
     z_displacement = check_symbol(node[i].disp_z)
@@ -328,45 +334,71 @@ for i in range(node_num):
     z_reaction = check_symbol(node[i].supp_rxn_z)
 
     all_loads += [{'type': 'rxn', 'position': node[i].node_position,
-                   'magnitude': round((y_reaction + node[i].node_load), 3)}]
+                   'magnitude': round(y_reaction, 3), 'node_load': node[i].node_load}]
+
+    all_moments += [{'type': 'rxn', 'position': node[i].node_position,
+                     'magnitude': round(z_reaction), 'node_moment': node[i].node_moment}]
 
     """print(f"vertical displacement at node {i + 1} = {round(y_displacement, 3)}")
     print(f"rotational displacement at node {i + 1} = {round(z_displacement, 3)}")"""
     print(f"vertical reaction at node {i + 1} = {round(y_reaction, 3)}")
-    # print(f"rotational reaction at node {i + 1} = {round(z_reaction, 3)}")
+    print(f"rotational reaction at node {i + 1} = {round(z_reaction, 3)}")
 
 for i in range(span_num):
     all_loads += span[i].loads
+    all_moments += span[i].moments
 
-# Getting the coordinates for the shear force diagram
-sf_x = 0
+# Plotting the shear force and bending moment diagram
 sf_array = []
-x = 0
 x_array = []
+bm_array = []
+x2_array = []
 
-while x <= beam_length:
+step = 0
+
+while step <= beam_length:
+    forces_encountered = []
+    imposed_moment = []
+
     for load in all_loads:
-        if (load['type'] == 'p') and (load['position'] == round(x, 2)):
-            sf_array.append(sf_x)
-            x_array.append(x)
-            sf_x -= load['magnitude']
+        if load['type'] == 'p' and load['position'] < round(step, 2):
+            forces_encountered.append(-1 * load['magnitude'])
+            imposed_moment.append(-1 * load['magnitude'] * (round(step, 2) - load['position']))
 
-        if load['type'] == 'rxn' and (load['position'] == round(x, 2)):
-            sf_array.append(sf_x)
-            x_array.append(x)
-            sf_x += load['magnitude']
+        if load['type'] == 'rxn' and load['position'] < round(step, 2):
+            forces_encountered.append(load['magnitude'] - load['node_load'])
+            imposed_moment.append(load['magnitude'] * (round(step, 2) - load['position']))
 
-        if load['type'] == 'd' and (load['start'] < round(x, 2) <= load['end']):
-            sf_x -= (load['unit_load'] * 0.1)
+        if load['type'] == 'd' and load['start'] < round(step, 2):
+            end = round(step, 2) if round(step, 2) < load['end'] else load['end']
+            forces_encountered.append(-1 * load['unit_load'] * (end - load['start']))
+            imposed_moment.append((-1 * load['unit_load'] * (end - load['start'])) *
+                                  (((end - load['start']) / 2) + (round(step, 2) - end)))
 
-    sf_x = round(sf_x, 2)
-    x = round(x, 2)
-    sf_array.append(sf_x)
-    x_array.append(x)
+    sf_array.append(sum(forces_encountered))
+    x_array.append(round(step, 2))
+    bm_array.append(sum(imposed_moment))
+    x2_array.append(round(step, 2))
 
-    x += 0.1
+# for sudden changes in shear force
+    for load in all_loads:
+        if load['type'] == 'p' and load['position'] == round(step, 2):
+            forces_encountered.append(-1 * load['magnitude'])
 
-# print(f"shear force: {sf_array}")
-# print(f"distance: {x_array}")
-for i in range(len(sf_array)):
-    print(f"position {x_array[i]} = {sf_array[i]}")
+        if load['type'] == 'rxn' and load['position'] == round(step, 2):
+            forces_encountered.append(load['magnitude'] - load['node_load'])
+
+        if load['type'] == 'd' and load['start'] == round(step, 2):
+            forces_encountered.append(-1 * load['unit_load'] * (round(step, 2) - load['start']))
+
+# for sudden changes in moment
+    for moment in all_moments:
+        if moment['position'] == round(step, 2):
+            imposed_moment.append(moment['magnitude'])
+
+    sf_array.append(sum(forces_encountered))
+    x_array.append(round(step, 2))
+    bm_array.append(sum(imposed_moment))
+    x2_array.append(round(step, 2))
+
+    step += 0.1
