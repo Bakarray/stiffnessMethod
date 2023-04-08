@@ -1,3 +1,4 @@
+import UI
 from sympy import symbols, Eq, solve
 
 
@@ -38,18 +39,24 @@ node = []
 span = []
 
 # Getting beam information from the user
-beam_length = float(input("What is the total length of the beam (m): "))
-node_num = int(input("How many nodes are on the beam (i.e points of; supports, joints, change in cross-section): "))
+beam_length = UI.length
+node_num = UI.node_num
+# beam_length = float(input("What is the total length of the beam (m): "))
+# node_num = int(input("How many nodes are on the beam (i.e. points of; supports, joints, change in cross-section): "))
 span_num = node_num - 1
 
 print("**Enter the node details**")
 print("support keywords => fixed: 'f', roller: 'r', pinned: 'p', no support: 'n'")
 for i in range(node_num):
     node.append(Nodes())
-    location, support, settlement = map(str, input(f"node {i + 1} (position (m), support, settlement(m)): ").split(','))
-    node[i].node_position = float(location)
-    node[i].supp_type = support
-    node[i].settlement = float(settlement)
+    # location, support, settlement = map(str, input(f"node {i + 1} (position (m), support, settlement(m)): ").split(
+    # ','))
+    # node[i].node_position = float(location)
+    # node[i].supp_type = support
+    # node[i].settlement = float(settlement)
+    node[i].node_position = UI.node_data[i]['position']
+    node[i].supp_type = UI.node_data[i]['support']
+    node[i].settlement = UI.node_data[i]['settlement']
 
 # To get the length of every span (they exist between nodes)
 for i in range(span_num):
