@@ -337,7 +337,7 @@ for i in range(node_num):
                    'magnitude': round(y_reaction, 3), 'node_load': node[i].node_load}]
 
     all_moments += [{'type': 'rxn', 'position': node[i].node_position,
-                     'magnitude': round(z_reaction), 'node_moment': node[i].node_moment}]
+                     'magnitude': round(z_reaction, 3), 'node_moment': node[i].node_moment}]
 
     """print(f"vertical displacement at node {i + 1} = {round(y_displacement, 3)}")
     print(f"rotational displacement at node {i + 1} = {round(z_displacement, 3)}")"""
@@ -363,17 +363,21 @@ while step <= beam_length:
     for load in all_loads:
         if load['type'] == 'p' and load['position'] < round(step, 2):
             forces_encountered.append(-1 * load['magnitude'])
-            imposed_moment.append(-1 * load['magnitude'] * (round(step, 2) - load['position']))
+            imposed_moment.append(load['magnitude'] * (round(step, 2) - load['position']))
 
         if load['type'] == 'rxn' and load['position'] < round(step, 2):
             forces_encountered.append(load['magnitude'] - load['node_load'])
-            imposed_moment.append(load['magnitude'] * (round(step, 2) - load['position']))
+            imposed_moment.append(-1 * load['magnitude'] * (round(step, 2) - load['position']))
 
         if load['type'] == 'd' and load['start'] < round(step, 2):
             end = round(step, 2) if round(step, 2) < load['end'] else load['end']
             forces_encountered.append(-1 * load['unit_load'] * (end - load['start']))
-            imposed_moment.append((-1 * load['unit_load'] * (end - load['start'])) *
+            imposed_moment.append((load['unit_load'] * (end - load['start'])) *
                                   (((end - load['start']) / 2) + (round(step, 2) - end)))
+
+    for moment in all_moments:
+        if moment['position'] < round(step, 2):
+            imposed_moment.append(moment['magnitude'])
 
     sf_array.append(sum(forces_encountered))
     x_array.append(round(step, 2))
@@ -401,4 +405,6 @@ while step <= beam_length:
     bm_array.append(sum(imposed_moment))
     x2_array.append(round(step, 2))
 
+    print(f"at x = {step}, {imposed_moment}")
     step += 0.1
+
