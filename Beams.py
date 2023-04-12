@@ -63,7 +63,7 @@ for i in range(span_num):
     span.append(Spans(loads=[], moments=[]))
     span[i].length = node[i + 1].node_position - node[i].node_position
 
-beam_loads = []  # A list to hold all the nodes on the beam
+beam_loads = []  # A list to hold all the loads on the beam
 load_num = int(input("How many loads are on the beam: "))
 if load_num:
     print("Load type (keyword): point load (p), uniformly distributed loading (d), or triangular loading (t) ")
