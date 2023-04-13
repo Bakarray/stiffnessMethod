@@ -39,24 +39,18 @@ node = []
 span = []
 
 # Getting beam information from the user
-beam_length = UI.length
-node_num = UI.node_num
-# beam_length = float(input("What is the total length of the beam (m): "))
-# node_num = int(input("How many nodes are on the beam (i.e. points of; supports, joints, change in cross-section): "))
+# beam_length = UI.length
+# node_num = UI.node_num
+beam_length = float(UI.length)
+node_num = int(UI.node_num)
 span_num = node_num - 1
 
-print("**Enter the node details**")
-print("support keywords => fixed: 'f', roller: 'r', pinned: 'p', no support: 'n'")
+print(UI.node_data)
 for i in range(node_num):
     node.append(Nodes())
-    # location, support, settlement = map(str, input(f"node {i + 1} (position (m), support, settlement(m)): ").split(
-    # ','))
-    # node[i].node_position = float(location)
-    # node[i].supp_type = support
-    # node[i].settlement = float(settlement)
-    node[i].node_position = UI.node_data[i]['position']
+    node[i].node_position = float(UI.node_data[i]['position'])
     node[i].supp_type = UI.node_data[i]['support']
-    node[i].settlement = UI.node_data[i]['settlement']
+    node[i].settlement = float(UI.node_data[i]['settlement'])
 
 # To get the length of every span (they exist between nodes)
 for i in range(span_num):
@@ -228,19 +222,19 @@ unknowns = []
 # getting the node reactions or displacements that are known and unknown
 for i in range(node_num):
     # to get the values of the displacement and forces at each of the nodes (known or unknown)
-    if node[i].supp_type == "f":
+    if node[i].supp_type == 'Fixed':
         node[i].supp_rxn_y, node[i].supp_rxn_z = symbols(f"vertical_reaction_at_node_{i + 1} "
                                                          f"rotational_reaction_at_node_{i + 1}")
         unknowns.append(node[i].supp_rxn_y)
         unknowns.append(node[i].supp_rxn_z)
 
-    elif node[i].supp_type == "p" or node[i].supp_type == "r":
+    elif node[i].supp_type == 'Pinned' or node[i].supp_type == 'Roller':
         node[i].supp_rxn_y, node[i].disp_z = symbols(f"vertical_reaction_at_node_{i + 1} "
                                                      f"rotational_displacement_at_node_{i + 1}")
         unknowns.append(node[i].supp_rxn_y)
         unknowns.append(node[i].disp_z)
 
-    elif node[i].supp_type == "n":
+    elif node[i].supp_type == 'Free':
         node[i].disp_y, node[i].disp_z = symbols(f"vertical_displacement_at_node_{i + 1} "
                                                  f"rotational_displacement_at_node_{i + 1}")
         unknowns.append(node[i].disp_y)
