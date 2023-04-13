@@ -34,6 +34,13 @@ class Nodes:
         self.node_position = node_position  # position of the node along the beam
 
 
+print(f"length = {UI.length}")
+print(f"node num = {UI.node_num}")
+print(f"load num = {UI.load_num}")
+print(f"node data = {UI.node_data}")
+print(f"load data = {UI.loads}")
+print(f"moment data - {UI.moments}")
+
 # Creating a list to hold all the instances of nodes and spans on the beam
 node = []
 span = []
@@ -57,18 +64,20 @@ for i in range(span_num):
     span.append(Spans(loads=[], moments=[]))
     span[i].length = node[i + 1].node_position - node[i].node_position
 
-beam_loads = []  # A list to hold all the loads on the beam
-load_num = int(input("How many loads are on the beam: "))
-if load_num:
-    print("Load type (keyword): point load (p), uniformly distributed loading (d), or triangular loading (t) ")
-
+# beam_loads = []  # A list to hold all the loads on the beam
+# load_num = int(input("How many loads are on the beam: "))
+# if load_num:
+#     print("Load type (keyword): point load (p), uniformly distributed loading (d), or triangular loading (t) ")
+beam_loads = UI.loads
+print(f"loads: {beam_loads}")
+load_num = int(UI.load_num)
 # gets and stores information about the span loadings  in the span class
 # Sign convention: Loadings acting upward is positive, loadings acting downward is negative
 for i in range(load_num):
-    beam_loads.append({'type': input(f"Load {i + 1} type: ")})  # Asks the user for the type of each load
+    # beam_loads.append({'type': input(f"Load {i + 1} type: ")})  # Asks the user for the type of each load
     if beam_loads[i]['type'] == 'p':
-        load_position, magnitude = map(float, input(f"load {i + 1} (position (m), magnitude (kn)) ").split(','))
-        beam_loads[i].update({'position': load_position, 'magnitude': magnitude})
+        # load_position, magnitude = map(float, input(f"load {i + 1} (position (m), magnitude (kn)) ").split(','))
+        # beam_loads[i].update({'position': load_position, 'magnitude': magnitude})
 
         for j in range(node_num):
             if beam_loads[i]['position'] == node[j].node_position:  # checks if the load is acting on a node
@@ -81,11 +90,11 @@ for i in range(load_num):
                 break
 
     if beam_loads[i]['type'] == 'd':
-        print("Enter the (start position, end position, unit load) of the uniformly distributed load")
-        start_position, end_position, unit_load = map(int,
-                                                      input(f"load {i + 1} (start (m), end (m), unit load (kn/m)): ").
-                                                      split(','))
-        beam_loads[i].update({'start': start_position, 'end': end_position, 'unit_load': unit_load})
+        # print("Enter the (start position, end position, unit load) of the uniformly distributed load")
+        # start_position, end_position, unit_load = map(int,
+        #                                               input(f"load {i + 1} (start (m), end (m), unit load (kn/m)): ").
+        #                                               split(','))
+        # beam_loads[i].update({'start': start_position, 'end': end_position, 'unit_load': unit_load})
 
         for j in range(span_num):
             if (node[j].node_position <= beam_loads[i]['start'] < node[j + 1].node_position) \
@@ -99,23 +108,22 @@ for i in range(load_num):
                 span[j].loads.append(beam_loads[i])
 
             elif (beam_loads[i]['end'] >= node[j + 1].node_position) \
-                    and (beam_loads[i]['start'] < node[j].node_position):  # udl crosses over the full span
+                    and (beam_loads[i]['start'] < node[j].node_position):  # udl starts b4 the span and ends after it
                 beam_loads[i]['start'] = node[j].node_position
-                beam_loads[i]['end'] = node[j + 1].node_load
+                beam_loads[i]['end'] = node[j + 1].node_position
                 span[j].loads.append(beam_loads[i])
 
             elif (beam_loads[i]['end'] < node[j + 1].node_position) \
-                    and (beam_loads[i]['start'] < node[j].node_position):
+                    and (beam_loads[i]['start'] < node[j].node_position): # udl starts before span and ends on it
                 beam_loads[i]['start'] = node[j].node_position
-                beam_loads[i]['end'] = end_position
                 span[j].loads.append(beam_loads[i])
 
 # Gets and stores information about the point moments on the beam
 # Sign convention: clockwise moments = positive; anticlockwise = negative
 beam_moments = []  # A list to hold all the point moments on the beam
-moment_num = int(input("How many point moments are on the beam: "))
+moment_num = UI.moment_num
 if moment_num:
-    print("Enter the magnitude and position of the point moments")
+    # print("Enter the magnitude and position of the point moments")
 
     for i in range(moment_num):
         magnitude, position = map(float, input(f"point moment {i + 1} (magnitude (kn.m), position (m): ").split(","))
@@ -131,7 +139,6 @@ if moment_num:
                 span[j - 1].moments.append(beam_moments[i])
                 break
 
-print(f"all moments: {beam_moments}")
 # Calculating the fixed end moments and reactions on each span due to applied loads
 for i in range(span_num):
     for loading in span[i].loads:
@@ -170,10 +177,10 @@ for i in range(span_num):
             span[i].left_fem_y = span[i].imposed_moments / span[i].length
             span[i].right_fem_y = span[i].total_loads - span[i].left_fem_y
 
-        print(f"left vertical rxn on span [{i+1}] = {span[i].left_fem_y}")
-        print(f"right vertical rxn on span [{i+1}] = {span[i].right_fem_y}")
-        print(f"left rotational rxn on span [{i+1}] = {span[i].left_fem_z}")
-        print(f"right rotational rxn on span [{i+1}] = {span[i].right_fem_z}")
+        print(f"left vertical rxn on span [{i + 1}] = {span[i].left_fem_y}")
+        print(f"right vertical rxn on span [{i + 1}] = {span[i].right_fem_y}")
+        print(f"left rotational rxn on span [{i + 1}] = {span[i].left_fem_z}")
+        print(f"right rotational rxn on span [{i + 1}] = {span[i].right_fem_z}")
 
     span[i].left_fem_y = round(span[i].left_fem_y, 2)
     span[i].right_fem_y = round(span[i].right_fem_y, 2)
@@ -385,7 +392,7 @@ while step <= beam_length:
     bm_array.append(sum(imposed_moment))
     x2_array.append(round(step, 2))
 
-# for sudden changes in shear force
+    # for sudden changes in shear force
     for load in all_loads:
         if load['type'] == 'p' and load['position'] == round(step, 2):
             forces_encountered.append(-1 * load['magnitude'])
@@ -396,7 +403,7 @@ while step <= beam_length:
         if load['type'] == 'd' and load['start'] == round(step, 2):
             forces_encountered.append(-1 * load['unit_load'] * (round(step, 2) - load['start']))
 
-# for sudden changes in moment
+    # for sudden changes in moment
     for moment in all_moments:
         if moment['position'] == round(step, 2):
             imposed_moment.append(moment['magnitude'])
@@ -408,4 +415,3 @@ while step <= beam_length:
 
     print(f"at x = {step}, {imposed_moment}")
     step += 0.1
-

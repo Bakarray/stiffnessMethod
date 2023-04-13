@@ -13,66 +13,75 @@ moments = []
 def load_btn_click(master):
     loadings = []
     applied_moments = []
+    moment_pos_entry = []
+    moment_mag_entry = []
 
-    def submit_load_details(moment_list):
-        global load_num, loads
+    def submit_load_details():
+        global loads
 
-        print(load_num)
-        print(loadings)
+        loads_btn_window.destroy()
         for load in loadings:
             if load['type'] == 'p':
-                loads.append({'type': load['type'], 'magnitude': load['magnitude'].get(),
-                             'position': load['position'].get()})
+                loads.append({'type': load['type'], 'magnitude': float(load['magnitude'].get()),
+                             'position': float(load['position'].get())})
             elif load['type'] == 'd':
-                loads.append({'type': load['type'], 'unit_load': load['unit_load'].get(), 'start': load['start'].get(),
-                             'end': load['end'].get()})
+                loads.append({'type': load['type'], 'unit_load': float(load['unit_load'].get()),
+                              'start': float(load['start'].get()), 'end': float(load['end'].get())})
+
+        for moment in applied_moments:
+            moments.append({'position': float(moment['position'].get()), 'magnitude': float(moment['magnitude'].get())})
 
     def get_load_details(btn, idx, current_type):
         global load_num
         btn[idx].grid_forget()
 
         if current_type == 'Point_Load':
-            loadings.append({'type': 'p', 'magnitude': '', 'position': ''})
+            loadings[int(idx)].update({'type': 'p', 'magnitude': '', 'position': ''})
             # create a label and entry box for the point load magnitude
             magnitude_label = tk.Label(load_info_frame, text='Magnitude (kn):')
             magnitude_label.grid(row=idx, column=2, padx=5, pady=5)
             loadings[int(idx)]['magnitude'] = tk.Entry(load_info_frame)
+            loadings[int(idx)]['magnitude'].insert(0, '0')
             loadings[int(idx)]['magnitude'].grid(row=idx, column=3, padx=5, pady=5)
 
             position_label = tk.Label(load_info_frame, text='Position (m):')
             position_label.grid(row=idx, column=4, padx=5, pady=5)
             loadings[int(idx)]['position'] = tk.Entry(load_info_frame)
+            loadings[int(idx)]['position'].insert(0, '0')
             loadings[int(idx)]['position'].grid(row=idx, column=5, padx=5, pady=5)
 
-        elif current_type == 'Point_Moment':
-            applied_moments.append({'magnitude': '', 'position': ''})
-            # create a label and entry box for the point moment magnitude
-            magnitude_label = tk.Label(load_info_frame, text='Magnitude (Kn.M):')
-            magnitude_label.grid(row=idx, column=2, padx=5, pady=5)
-            applied_moments[int(idx)]['magnitude'] = tk.Entry(load_info_frame)
-            applied_moments[int(idx)]['magnitude'].grid(row=idx, column=3, padx=5, pady=5)
-
-            position_label = tk.Label(load_info_frame, text='Position (m):')
-            position_label.grid(row=idx, column=4, padx=5, pady=5)
-            applied_moments[int(idx)]['position'] = tk.Entry(load_info_frame)
-            applied_moments[int(idx)]['position'].grid(row=idx, column=5, padx=5, pady=5)
+        # elif current_type == 'Point_Moment':
+        #     applied_moments.append({'magnitude': '', 'position': ''})
+        #     # create a label and entry box for the point moment magnitude
+        #     magnitude_label = tk.Label(load_info_frame, text='Magnitude (Kn.M):')
+        #     magnitude_label.grid(row=idx, column=2, padx=5, pady=5)
+        #     applied_moments[int(idx)]['magnitude'] = tk.Entry(load_info_frame)
+        #     applied_moments[int(idx)]['magnitude'].grid(row=idx, column=3, padx=5, pady=5)
+        #
+        #     position_label = tk.Label(load_info_frame, text='Position (m):')
+        #     position_label.grid(row=idx, column=4, padx=5, pady=5)
+        #     applied_moments[int(idx)]['position'] = tk.Entry(load_info_frame)
+        #     applied_moments[int(idx)]['position'].grid(row=idx, column=5, padx=5, pady=5)
 
         elif current_type == 'Uniformly_distributed_load':
-            loadings.append({'type': 'd', 'unit_load': '', 'start': '', 'end': ''})
+            loadings[int(idx)].update({'type': 'd', 'unit_load': '', 'start': '', 'end': ''})
             # create labels and entry boxes for the distributed load magnitude and span length
             unit_load_label = tk.Label(load_info_frame, text='Unit_Load:')
             unit_load_label.grid(row=idx, column=2, padx=5, pady=5)
             loadings[int(idx)]['unit_load'] = tk.Entry(load_info_frame)
+            loadings[int(idx)]['unit_load'].insert(0, '0')
             loadings[int(idx)]['unit_load'].grid(row=idx, column=3, padx=5, pady=5)
 
             start_pos_label = tk.Label(load_info_frame, text='Start_pos (m):')
             start_pos_label.grid(row=idx, column=4, padx=5, pady=5)
             loadings[int(idx)]['start'] = tk.Entry(load_info_frame)
+            loadings[int(idx)]['start'].insert(0, '0')
             loadings[int(idx)]['start'].grid(row=idx, column=5, padx=5, pady=5)
 
             end_pos_label = tk.Label(load_info_frame, text='End_pos (m):')
             end_pos_label.grid(row=idx, column=6, padx=5, pady=5)
             loadings[int(idx)]['end'] = tk.Entry(load_info_frame)
+            loadings[int(idx)]['end'].insert(0, '0')
             loadings[int(idx)]['end'].grid(row=idx, column=7, padx=5, pady=5)
 
     def get_load_info():
@@ -83,6 +92,9 @@ def load_btn_click(master):
 
         loads_submit_btn1.grid_forget()
         load_num = int(load_num_entry.get())
+        moment_num = int(moment_num_entry.get())
+        for i in range(load_num):
+            loadings.append({})
         for i in range(load_num):
             current_type.append(tk.StringVar())
             type_label = tk.Label(load_info_frame, text=f"Load{i + 1}   type:")
@@ -100,8 +112,21 @@ def load_btn_click(master):
                                                                           current_type[idx].get())))
             detail_buttons[i].grid(row=i, column=2, padx=5, pady=5)
 
+        for i in range(moment_num):
+            moment_mag_label = tk.Label(load_info_frame, text=f"Moment{i+1}   Magnitude:")
+            moment_mag_label.grid(row=load_num+i, column=0, padx=5, pady=5)
+            moment_mag_entry.append(tk.Entry(load_info_frame))
+            moment_mag_entry.insert(0, '0')
+            moment_mag_entry[i].grid(row=load_num+i, column=1, padx=5, pady=5)
+
+            moment_pos_label = tk.Label(load_info_frame, text=f"Position:")
+            moment_pos_label.grid(row=load_num+i, column=2, padx=5, pady=5)
+            moment_pos_entry.append(tk.Entry(load_info_frame))
+            moment_pos_entry.insert(0, '0')
+            moment_pos_entry[i].grid(row=load_num+i, column=3, padx=5, pady=5)
+
         load_submit_btn2 = tk.Button(load_info_frame, text='Submit', bg='grey', fg='white',
-                                     command=lambda: submit_load_details(applied_moments))
+                                     command=lambda: submit_load_details())
         load_submit_btn2.grid(row=load_num + moment_num, column=0, columnspan=2, padx=5, pady=5)
 
     loads_btn_window = tk.Toplevel(master)
@@ -112,6 +137,12 @@ def load_btn_click(master):
     load_num_entry = tk.Entry(loads_btn_window)
     load_num_entry.insert(0, '0')
     load_num_entry.grid(row=0, column=1, padx=10, pady=10)
+
+    moment_num_label = tk.Label(loads_btn_window, text='Number of point moment(s) on the beam:')
+    moment_num_label.grid(row=1, column=0, padx=10, pady=10)
+    moment_num_entry = tk.Entry(loads_btn_window)
+    moment_num_entry.insert(0, '0')
+    moment_num_entry.grid(row=1, column=1, padx=10, pady=10)
 
     loads_submit_btn1 = tk.Button(loads_btn_window, text='Submit', bg='grey', fg='white', command=get_load_info)
     loads_submit_btn1.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
