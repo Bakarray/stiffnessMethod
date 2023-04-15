@@ -71,6 +71,7 @@ for i in range(span_num):
 beam_loads = UI.loads
 print(f"loads: {beam_loads}")
 load_num = int(UI.load_num)
+print(load_num)
 # gets and stores information about the span loadings  in the span class
 # Sign convention: Loadings acting upward is positive, loadings acting downward is negative
 for i in range(load_num):

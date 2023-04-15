@@ -10,7 +10,7 @@ loads = []
 moments = []
 
 
-def load_btn_click(master):
+def load_btn_click(master, input_frame):
     loadings = []
     applied_moments = []
     moment_pos_entry = []
@@ -19,22 +19,58 @@ def load_btn_click(master):
     def submit_load_details():
         global loads
 
-        loads_btn_window.destroy()
+        load_index = moment_index = 0
         for load in loadings:
+            load_data_label = tk.Label(input_frame, text=f'Load {load_index + 1}:')
+            load_data_label.grid(row=load_index, column=0, padx=5, pady=5)
+
             if load['type'] == 'p':
                 loads.append({'type': load['type'], 'magnitude': float(load['magnitude'].get()),
                              'position': float(load['position'].get())})
+
+                type_label = tk.Label(input_frame, text=f"Type: Point load")
+                type_label.grid(row=load_index, column=1, padx=5, pady=5)
+
+                magnitude_label = tk.Label(input_frame, text=f"Magnitude: {float(load['magnitude'].get())}")
+                magnitude_label.grid(row=load_index, column=2, padx=5, pady=5)
+
+                position_label = tk.Label(input_frame, text=f"Position: {float(load['position'].get())}")
+                position_label.grid(row=load_index, column=3, padx=5, pady=5)
+
             elif load['type'] == 'd':
                 loads.append({'type': load['type'], 'unit_load': float(load['unit_load'].get()),
                               'start': float(load['start'].get()), 'end': float(load['end'].get())})
 
+                type_label = tk.Label(input_frame, text=f"Type: Distributed load")
+                type_label.grid(row=load_index, column=1, padx=5, pady=5)
+
+                unit_load_label = tk.Label(input_frame, text=f"Unit load: {float(load['unit_load'].get())}")
+                unit_load_label.grid(row=load_index, column=2, padx=5, pady=5)
+
+                start_pos_label = tk.Label(input_frame, text=f"Start: {float(load['start'].get())}")
+                start_pos_label.grid(row=load_index, column=3, pady=5, padx=5)
+
+                end_pos_label = tk.Label(input_frame, text=f"End: {float(load['end'].get())}")
+                end_pos_label.grid(row=load_index, column=4, pady=5, padx=5)
+
+            load_index += 1
+
         for moment in applied_moments:
             moments.append({'position': float(moment['position'].get()), 'magnitude': float(moment['magnitude'].get())})
+
+            load_data_label = tk.Label(input_frame, text=f'Load {moment_index + 1}:')
+            load_data_label.grid(row=moment_index + load_num, column=0, padx=5, pady=5)
+
+            magnitude_label = tk.Label(input_frame, text=f"Magnitude: {float(moment['magnitude'].get())}")
+            magnitude_label.grid(row=moment_index + load_num, column=1, padx=5, pady=5)
+
+            position_label = tk.Label(input_frame, text=f"Position: {float(moment['position'].get())}")
+            position_label.grid(row=moment_index + load_num, column=2, padx=5, pady=5)
 
     def get_load_details(btn, idx, current_type):
         global load_num
         btn[idx].grid_forget()
-
+        print(loadings)
         if current_type == 'Point_Load':
             loadings[int(idx)].update({'type': 'p', 'magnitude': '', 'position': ''})
             # create a label and entry box for the point load magnitude
@@ -49,19 +85,6 @@ def load_btn_click(master):
             loadings[int(idx)]['position'] = tk.Entry(load_info_frame)
             loadings[int(idx)]['position'].insert(0, '0')
             loadings[int(idx)]['position'].grid(row=idx, column=5, padx=5, pady=5)
-
-        # elif current_type == 'Point_Moment':
-        #     applied_moments.append({'magnitude': '', 'position': ''})
-        #     # create a label and entry box for the point moment magnitude
-        #     magnitude_label = tk.Label(load_info_frame, text='Magnitude (Kn.M):')
-        #     magnitude_label.grid(row=idx, column=2, padx=5, pady=5)
-        #     applied_moments[int(idx)]['magnitude'] = tk.Entry(load_info_frame)
-        #     applied_moments[int(idx)]['magnitude'].grid(row=idx, column=3, padx=5, pady=5)
-        #
-        #     position_label = tk.Label(load_info_frame, text='Position (m):')
-        #     position_label.grid(row=idx, column=4, padx=5, pady=5)
-        #     applied_moments[int(idx)]['position'] = tk.Entry(load_info_frame)
-        #     applied_moments[int(idx)]['position'].grid(row=idx, column=5, padx=5, pady=5)
 
         elif current_type == 'Uniformly_distributed_load':
             loadings[int(idx)].update({'type': 'd', 'unit_load': '', 'start': '', 'end': ''})
@@ -93,15 +116,14 @@ def load_btn_click(master):
         loads_submit_btn1.grid_forget()
         load_num = int(load_num_entry.get())
         moment_num = int(moment_num_entry.get())
-        for i in range(load_num):
-            loadings.append({})
+
         for i in range(load_num):
             current_type.append(tk.StringVar())
             type_label = tk.Label(load_info_frame, text=f"Load{i + 1}   type:")
             type_label.grid(row=i, column=0, padx=5, pady=5)
 
             type_entry.append(ttk.Combobox(load_info_frame,
-                                           values=['Point_Load', 'Point_Moment', 'Uniformly_distributed_load'],
+                                           values=['Point_Load', 'Uniformly_distributed_load'],
                                            state='readonly', textvariable=current_type[i]))
             type_entry[i].current(0)
             type_entry[i].grid(row=i, column=1, padx=5, pady=5)
@@ -111,6 +133,8 @@ def load_btn_click(master):
                                    command=lambda idx=i: get_load_details(detail_buttons, idx,
                                                                           current_type[idx].get())))
             detail_buttons[i].grid(row=i, column=2, padx=5, pady=5)
+
+            loadings.append({'type': current_type[i].get()})
 
         for i in range(moment_num):
             moment_mag_label = tk.Label(load_info_frame, text=f"Moment{i+1}   Magnitude:")
@@ -152,7 +176,7 @@ def load_btn_click(master):
     load_info_frame.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
 
 
-def nodes_btn_click(master):
+def nodes_btn_click(master, input_frame):
     position_entry = []
     support_entry = []
     settlement_entry = []
@@ -163,7 +187,18 @@ def nodes_btn_click(master):
         for i in range(num):
             node_data.append({'position': position_entry[i].get(), 'support': support_entry[i].get(),
                               'settlement': settlement_entry[i].get()})
-        print(f"node_data from UI: {node_data}")
+            node_data_label = tk.Label(input_frame, text=f'Node {i + 1}:')
+            node_data_label.grid(row=i, column=0, padx=5, pady=5)
+
+            position_label = tk.Label(input_frame, text=f'Position: {position_entry[i].get()}')
+            position_label.grid(row=i, column=1, padx=5, pady=5)
+
+            support_label = tk.Label(input_frame, text=f'Support: {support_entry[i].get()}')
+            support_label.grid(row=i, column=2, padx=5, pady=5)
+
+            settlement_label = tk.Label(input_frame, text=f'Settlement: {settlement_entry[i].get()}')
+            settlement_label.grid(row=i, column=4, padx=5, pady=5)
+
         nodes_btn_window.destroy()
 
     def get_node_details():
@@ -221,7 +256,7 @@ def nodes_btn_click(master):
     support_info_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=10)
 
 
-def beam_btn_click(master):
+def beam_btn_click(master, input_label):
     beam_btn_window = tk.Toplevel(master)
     beam_btn_window.title('Beam Details')
 
@@ -232,12 +267,14 @@ def beam_btn_click(master):
     length_entry.insert(0, '0.0')
     length_entry.grid(row=0, column=1, padx=10, pady=10)
 
-    def close_window():
+    def submit_length():
         global length
         length = float(length_entry.get())
         beam_btn_window.destroy()
+        # Update the user_input_frame with the value entered by the user
+        input_label.config(text=f"Length: {length} meters")
 
-    len_submit_btn = tk.Button(beam_btn_window, text='Submit', bg='grey', fg='white', command=close_window)
+    len_submit_btn = tk.Button(beam_btn_window, text='Submit', bg='grey', fg='white', command=submit_length)
     len_submit_btn.grid(row=1, column=0, columnspan=2, padx=5, pady=5)
 
 
@@ -250,22 +287,36 @@ def start_beam_analysis():
     model_label.grid(column=0, row=0, padx=5, pady=5)
 
     beam_btn = tk.Button(beam_analysis_window, text='Beam', bg='grey', fg='white', justify="center", width=20, height=5,
-                         command=lambda: beam_btn_click(beam_analysis_window))
+                         command=lambda: beam_btn_click(beam_analysis_window, length_input))
     beam_btn.grid(column=0, row=1, padx=5, pady=5)
 
     nodes_btn = tk.Button(beam_analysis_window, text='Nodes', bg='grey', fg='white', justify="center",
-                          width=20, height=5, command=lambda: nodes_btn_click(beam_analysis_window))
+                          width=20, height=5, command=lambda: nodes_btn_click(beam_analysis_window, nodes_input_frame))
     nodes_btn.grid(column=0, row=2, padx=5, pady=5)
 
     loads_label = tk.Label(beam_analysis_window, text="Loads and Moments")
     loads_label.grid(column=1, row=0, padx=5, pady=5)
 
     loads_btn = tk.Button(beam_analysis_window, text='Loads', bg='grey', fg='white', justify="center",
-                          width=20, height=5, command=lambda: load_btn_click(beam_analysis_window))
+                          width=20, height=5, command=lambda: load_btn_click(beam_analysis_window, loads_input_frame))
     loads_btn.grid(column=1, row=1, padx=5, pady=5, rowspan=2)
 
     beam_analysis_window.columnconfigure(0, weight=1)
     beam_analysis_window.columnconfigure(1, weight=1)
+
+    # Create a LabelFrame to display user input
+    user_input_label = tk.Label(beam_analysis_window, text='Beam Details')
+    user_input_label.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+
+    # Add labels to the user input frame
+    length_input = tk.Label(beam_analysis_window, text='Length: ')
+    length_input.grid(row=4, column=0, padx=5, pady=5, sticky='we')
+
+    nodes_input_frame = tk.LabelFrame(beam_analysis_window, text='Nodes')
+    nodes_input_frame.grid(row=5, column=0, padx=5, pady=5, sticky='we')
+
+    loads_input_frame = tk.LabelFrame(beam_analysis_window, text='Loads')
+    loads_input_frame.grid(row=6, column=0, padx=5, pady=5, sticky='we')
 
 
 window = tk.Tk()
