@@ -34,12 +34,13 @@ def perform_beam_analysis(ui_length, ui_node_num, ui_load_num, ui_moment_num, ui
             self.fem_rxn_z = fem_rxn_z  # rotational reaction resulting from member loading
             self.node_position = node_position  # position of the node along the beam
 
-    print(f"length = {ui_length}")
-    print(f"node num = {ui_node_num}")
-    print(f"load num = {ui_load_num}")
-    print(f"node data = {ui_node_data}")
-    print(f"load data = {ui_loads}")
-    print(f"moment data - {ui_moments}")
+    # print(f"length = {ui_length}")
+    # print(f"node num = {ui_node_num}")
+    # print(f"load num = {ui_load_num}")
+    # print(f"node data = {ui_node_data}")
+    # print(f"load data = {ui_loads}")
+    # print(f"moment num = {ui_moment_num}")
+    # print(f"moment data - {ui_moments}")
 
     # Creating a list to hold all the instances of nodes and spans on the beam
     node = []
@@ -52,7 +53,6 @@ def perform_beam_analysis(ui_length, ui_node_num, ui_load_num, ui_moment_num, ui
     node_num = int(ui_node_num)
     span_num = node_num - 1
 
-    print(ui_node_data)
     for i in range(node_num):
         node.append(Nodes())
         node[i].node_position = float(ui_node_data[i]['position'])
@@ -69,9 +69,7 @@ def perform_beam_analysis(ui_length, ui_node_num, ui_load_num, ui_moment_num, ui
     # if load_num:
     #     print("Load type (keyword): point load (p), uniformly distributed loading (d), or triangular loading (t) ")
     beam_loads = ui_loads
-    print(f"loads: {beam_loads}")
     load_num = int(ui_load_num)
-    print(load_num)
 
     # gets and stores information about the span loadings  in the span class
     # Sign convention: Loadings acting upward is positive, loadings acting downward is negative
@@ -130,15 +128,15 @@ def perform_beam_analysis(ui_length, ui_node_num, ui_load_num, ui_moment_num, ui
 
     # Gets and stores information about the point moments on the beam
     # Sign convention: clockwise moments = positive; anticlockwise = negative
-    beam_moments = []  # A list to hold all the point moments on the beam
+    beam_moments = ui_moments  # A list to hold all the point moments on the beam
     moment_num = ui_moment_num
     if moment_num:
         # print("Enter the magnitude and position of the point moments")
 
         for i in range(moment_num):
-            magnitude, position = map(float,
-                                      input(f"point moment {i + 1} (magnitude (kn.m), position (m): ").split(","))
-            beam_moments.append({'position': position, 'magnitude': magnitude})
+            # magnitude, position = map(float,
+            # input(f"point moment {i + 1} (magnitude (kn.m), position (m): ").split(","))
+            # beam_moments.append({'position': position, 'magnitude': magnitude})
 
             for n in node:  # if point moment is acting on a node
                 if beam_moments[i]['position'] == n.node_position:
@@ -151,7 +149,6 @@ def perform_beam_analysis(ui_length, ui_node_num, ui_load_num, ui_moment_num, ui
                     break
 
     # Calculating the fixed end moments and reactions on each span due to applied loads
-    print(span)
     for i in range(span_num):
         for loading in span[i].loads:
             if loading['type'] == 'p':
@@ -188,11 +185,6 @@ def perform_beam_analysis(ui_length, ui_node_num, ui_load_num, ui_moment_num, ui
 
                 span[i].left_fem_y = span[i].imposed_moments / span[i].length
                 span[i].right_fem_y = span[i].total_loads - span[i].left_fem_y
-
-            print(f"left vertical rxn on span [{i + 1}] = {span[i].left_fem_y}")
-            print(f"right vertical rxn on span [{i + 1}] = {span[i].right_fem_y}")
-            print(f"left rotational rxn on span [{i + 1}] = {span[i].left_fem_z}")
-            print(f"right rotational rxn on span [{i + 1}] = {span[i].right_fem_z}")
 
         span[i].left_fem_y = round(span[i].left_fem_y, 2)
         span[i].right_fem_y = round(span[i].right_fem_y, 2)
@@ -335,8 +327,6 @@ def perform_beam_analysis(ui_length, ui_node_num, ui_load_num, ui_moment_num, ui
 
         final_equations.append(equation1)
         final_equations.append(equation2)
-        print(f"node {i}: equation 1 = {equation1}")
-        print(f"node {i}: equation 2 = {equation2}")
 
     solution = solve(tuple(final_equations), tuple(unknowns))
 
@@ -357,8 +347,8 @@ def perform_beam_analysis(ui_length, ui_node_num, ui_load_num, ui_moment_num, ui
         all_moments += [{'type': 'rxn', 'position': node[i].node_position,
                          'magnitude': round(z_reaction, 3), 'node_moment': node[i].node_moment}]
 
-        """print(f"vertical displacement at node {i + 1} = {round(y_displacement, 3)}")
-        print(f"rotational displacement at node {i + 1} = {round(z_displacement, 3)}")"""
+        # print(f"vertical displacement at node {i + 1} = {round(y_displacement, 3)}")
+        # print(f"rotational displacement at node {i + 1} = {round(z_displacement, 3)}")
         print(f"vertical reaction at node {i + 1} = {round(y_reaction, 3)}")
         print(f"rotational reaction at node {i + 1} = {round(z_reaction, 3)}")
 
@@ -366,11 +356,16 @@ def perform_beam_analysis(ui_length, ui_node_num, ui_load_num, ui_moment_num, ui
         all_loads += span[i].loads
         all_moments += span[i].moments
 
+    print(all_loads)
+    print(all_moments)
+
     # Plotting the shear force and bending moment diagram
     sf_array = []
     x_array = []
     bm_array = []
     x2_array = []
+    sf_label_coord = []
+    bm_label_coord = []
 
     step = 0
 
@@ -406,9 +401,13 @@ def perform_beam_analysis(ui_length, ui_node_num, ui_load_num, ui_moment_num, ui
         for load in all_loads:
             if load['type'] == 'p' and load['position'] == round(step, 2):
                 forces_encountered.append(-1 * load['magnitude'])
+                sf_label_coord.append((step, sum(forces_encountered)))  # sets the coordinate for labelling on the SFD
+                bm_label_coord.append((step, sum(imposed_moment)))  # sets the coordinate for labelling on the BMD
 
             if load['type'] == 'rxn' and load['position'] == round(step, 2):
                 forces_encountered.append(load['magnitude'] - load['node_load'])
+                sf_label_coord.append((step, sum(forces_encountered)))  # sets the coordinate for labelling on the SFD
+                bm_label_coord.append((step, sum(imposed_moment)))  # sets the coordinate for labelling on the BMD
 
             if load['type'] == 'd' and load['start'] == round(step, 2):
                 forces_encountered.append(-1 * load['unit_load'] * (round(step, 2) - load['start']))
@@ -423,7 +422,6 @@ def perform_beam_analysis(ui_length, ui_node_num, ui_load_num, ui_moment_num, ui
         bm_array.append(sum(imposed_moment))
         x2_array.append(round(step, 2))
 
-        print(f"at x = {step}, {imposed_moment}")
         step += 0.1
 
     x_sf = x_array
@@ -443,11 +441,32 @@ def perform_beam_analysis(ui_length, ui_node_num, ui_load_num, ui_moment_num, ui
     ax_sf.set_ylabel('Shear Force (kN)')
     ax_sf.set_title('Shear Force and Bending Moment Diagrams')
 
+    # Add shear force values as text annotations
+    sf_points = sf_label_coord  # Example points to display shear force values
+    print(sf_points)
+    for point in sf_points:
+        x, y = point
+        if y < 0:
+            va = 'top'
+        else:
+            va = 'bottom'
+        ax_sf.text(x, y, '{:.2f}'.format(y), ha='center', va=va)
+
     # Plot the bending moment diagram on the second subplot
     ax_bm.plot(x_bm, y_bm, label='Bending Moment', color='blue')
     ax_bm.axhline(y=0, color='black', linewidth=1)
     ax_bm.set_xlabel('Distance (m)')
     ax_bm.set_ylabel('Bending Moment (kNm)')
+
+    # Add bending moment values as text annotations
+    bm_points = bm_label_coord  # Example points to display bending moment values
+    for point in bm_points:
+        x, y = point
+        if y < 0:
+            va = 'top'
+        else:
+            va = 'bottom'
+        ax_bm.text(x, y, '{:.2f}'.format(y), ha='center', va=va)
 
     # Set the axis limits
     ax_sf.set_xlim([-1, span + 1])
@@ -459,3 +478,4 @@ def perform_beam_analysis(ui_length, ui_node_num, ui_load_num, ui_moment_num, ui
 
     # Show the plot
     plt.show()
+
